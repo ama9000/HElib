@@ -13,7 +13,6 @@
 using namespace std;
 using namespace NTL;
 
-// /* ========= Utility Functions ========= */
 
 typedef unsigned int uint;
 typedef unsigned long ulong;
@@ -36,11 +35,48 @@ private:
     }
 };
 
+// /* ========= Public Params ========= */
+
+FHEcontext* context;
+FHESecKey* secretKey;
+FHEPubKey* publicKey;
+ZZX G;
+Timer timer;
+
+// /* ========= Utility Functions ========= */
+
+void setupHElib() {
+
+
+		// ## Start of FHE setup ##
+		long p = 2;     // plaintext module
+		long r = 1;
+		long L = 16;    // number of levels
+		long c = 2;
+		long w = 64;
+		long d = 0;
+		long k = 128;
+		long s = 0;
+
+		long m = FindM(k,L,c,p,d,s,0);
+
+		context = new FHEcontext(m,p,r);
+		buildModChain(*context, L, c);
+		G = context->alMod.getFactorsOverZZ()[0];
+
+		secretKey = new FHESecKey(*context);
+		publicKey = secretKey;
+
+		secretKey->GenSecKey(w);
+		addSome1DMatrices(*secretKey); // compute key-switching matrices that we need
+}
+
+
 ZZX createPolyFromCoeffsArray(char *coeffs){
     ZZX poly;
     for (int i=0; i<strlen(coeffs)-1;i++)
         SetCoeff(poly, i, coeffs[i]-'0');
-    SetCoeff(poly, strlen(coeffs)-1, 1);
+    //SetCoeff(poly, strlen(coeffs)-1, 1);
     return poly;
 }
 
@@ -132,19 +168,23 @@ void printZZX(ZZX poly) {
 
 class node{
 
+	//public FHEPubKey;
+
 private:
-    int value; 						// Stores the value of a node
-    ZZX valueX;					// Stores the polynomial representation of the node value
-    //Ctxt *vctxt;					// Stores the encrypted version of the value
-    int index;						// Stores the class label for leaf nodes. For non-leaf nodes, it stores the value of the attribute of the parent's' split
-    bool isLeaf;					// boolean flag for leaf nodes
-    bool isRight;                   // boolean flag to distinguish if leaf is right child of parent node
-    node* left;						// Stores a pointer to the node's left child
-    node* right;					// Stores a pointer to the node's right child
+    int value; 								// Stores the value of a node
+    ZZX valueX;								// Stores the polynomial representation of the node value
+    Ctxt vctxt = Ctxt(*publicKey);			// Stores the encrypted version of the value
+    Ctxt path_cost = Ctxt(*publicKey);		// Stores the encrypted path cost to this node
+    int index;								// Stores the class label for leaf nodes. For non-leaf nodes, it stores the value of the attribute of the parent's' split
+    bool isLeaf;								// boolean flag for leaf nodes
+    bool isRight;                   			// boolean flag to distinguish if leaf is right child of parent node
+    node* parent;							// Stores a pointer to the node's parent
+    node* left;								// Stores a pointer to the node's left child
+    node* right;								// Stores a pointer to the node's right child
 
 public:
     node();
-    node(int, int, bool, bool, node*, node*);
+    node(int, int, bool, bool, node*, node*, node*);
     virtual ~node();
 
     // GET ELEMENETS:
@@ -152,9 +192,12 @@ public:
     ZZX get_valueX(){
         return valueX;
     }
-//    Ctxt* get_vctxt(){
-//        return vctxt;
-//    }
+    Ctxt get_vctxt(){
+        return vctxt;
+    }
+    Ctxt get_pathCost(){
+    		return path_cost;
+    }
     int get_index(){
         return index;
     }
@@ -163,6 +206,9 @@ public:
     }
     bool get_isRight(){
         return isRight;
+    }
+    node* get_parent(){
+        return parent;
     }
     node* get_left(){
         return left;
@@ -178,9 +224,12 @@ public:
     void set_valueX(ZZX v){
         valueX = v;
     }
-//    void set_vctxt(Ctxt *vc){
-//        vctxt = vc;
-//    }
+    void set_vctxt(Ctxt vc){
+        vctxt = vc;
+    }
+    void set_pathCost(Ctxt pc){
+    		path_cost = pc;
+    }
     void set_index(int id){
         index = id;
     }
@@ -189,6 +238,9 @@ public:
     }
     void set_isRight(bool ir){
         isRight = ir;
+    }
+    void set_parent(node* p){
+        parent = p;
     }
     void set_left(node* l){
         left = l;
@@ -201,7 +253,6 @@ public:
 
 node::node() {
     value = 0;
-    //vctxt = new HEctxt();
     index = 0;
     isLeaf = false;
     isRight = false;
@@ -209,12 +260,12 @@ node::node() {
     right = NULL;
 }
 
-node::node(int v, int id, bool leaf, bool ir, node* l, node* r){
+node::node(int v, int id, bool leaf, bool ir, node* p, node* l, node* r){
     value = v;
-    //vctxt = new HEctxt();
     index = id;
     isLeaf = leaf;
     isRight = ir;
+    parent = p;
     left = l;
     right = r;
 }
@@ -228,7 +279,7 @@ vector<node> StructTree(int height, string type ) {
 
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_int_distribution<long> dis(0, 1);
+	std::uniform_int_distribution<long> dis(0, 15);  // set the range of random values
 
 	vector<node> Nodes;
 	int index = 0;
@@ -241,22 +292,26 @@ vector<node> StructTree(int height, string type ) {
 		int leafNum = pow(2,height);		//2^height;
 
 		for (int i=0; i<nodeNum; i++){
-			node n (dis(gen), index++, false, false, NULL, NULL);
+			node n (dis(gen), index++, false, false, NULL, NULL, NULL);
 			Nodes.push_back(n);
 		}
 
 		// Step 2: Set the root's children:
 		Nodes[0].set_left(&Nodes[1]);
+		Nodes[1].set_parent(&Nodes[0]);
 		Nodes[0].set_right(&Nodes[2]);
+		Nodes[2].set_parent(&Nodes[0]);
 		Nodes[2].set_isRight(true);
 
 		int stop = nodeNum-leafNum;
 
-		// Step 3: Set internal nodes' children:
+		// Step 3: Set internal nodes' children and parents:
 		int j = 2;
 		for (int i = 1; i < stop; i++){
 			Nodes[i].set_left(&Nodes[i+j]);
+			Nodes[i+j].set_parent(&Nodes[i]);
 			Nodes[i].set_right(&Nodes[i+j+1]);
+			Nodes[i+j+1].set_parent(&Nodes[i]);
 			Nodes[i+j+1].set_isRight(true);
 			j++;
 		}
@@ -271,6 +326,7 @@ vector<node> StructTree(int height, string type ) {
 		}
 		// Printing Tree Information:
 		cout << endl;
+		cout << "# Printing Created Tree Information #" << endl;
 		cout << "Tree Height = " << height << endl;
 		cout << "Total Number of Nodes = " << nodeNum << endl;
 		cout << "Number of Decision Nodes = " << stop << endl;
@@ -278,6 +334,7 @@ vector<node> StructTree(int height, string type ) {
 
 		// Printing Node's int values + Setting isRight flag
 
+		cout << "# Printing Created Tree Nodes #" << endl;
 		for (int i=0; i<nodeNum; i++){
 			cout << "Node index= " << Nodes[i].get_index() << ", Value= " <<  Nodes[i].get_value();
 			if (Nodes[i].get_isRight()){
@@ -287,6 +344,8 @@ vector<node> StructTree(int height, string type ) {
 				cout << " Leaf Node !! ";
 			cout << endl;
 		}
+		cout << endl;
+		cout << endl;
 	}
 
 	if (type == "full") {
@@ -297,13 +356,15 @@ vector<node> StructTree(int height, string type ) {
 		int nodeNum = (pow(2,height+1)-1) - remLeaf;
 
 		for (int i=0; i<nodeNum; i++){
-			node n (dis(gen), index++, false, false, NULL, NULL);
+			node n (dis(gen), index++, false, false, NULL, NULL, NULL);
 			Nodes.push_back(n);
 		}
 
 		// Step 2: Set the root's children:
 		Nodes[0].set_left(&Nodes[1]);
+		Nodes[1].set_parent(&Nodes[0]);
 		Nodes[0].set_right(&Nodes[2]);
+		Nodes[2].set_parent(&Nodes[0]);
 		Nodes[2].set_isRight(true);
 
 		// Step 3: Set internal nodes' children:
@@ -311,9 +372,11 @@ vector<node> StructTree(int height, string type ) {
 		for (int i = 1; i < stop; i++){
 			if ( 2*i+1 < stop) {
 				Nodes[i].set_left(&Nodes[2*i+1]);       //odd index
+				Nodes[2*i+1].set_parent(&Nodes[i]);
 			}
 			if ( (2*i)+2 < stop) {
 				Nodes[i].set_right(&Nodes[2*i+2]);     // even index
+				Nodes[2*i+2].set_parent(&Nodes[i]);
 				Nodes[2*i+2].set_isRight(true);
 			}
 		}
@@ -326,10 +389,12 @@ vector<node> StructTree(int height, string type ) {
 				Nodes[i].set_value(value++);
 			}
 		}
+
 		// Printing Tree Information:
 		value = value-1;
 		int decNodes = nodeNum-value;
 		cout << endl;
+		cout << "# Printing Created Tree Information #" << endl;
 		cout << "Tree Height = " << height << endl;
 		cout << "Total Number of Nodes = " << nodeNum << endl;
 		cout << "Number of Decision Nodes = " << decNodes << endl;
@@ -337,6 +402,7 @@ vector<node> StructTree(int height, string type ) {
 
 		// Printing Node's int values:
 
+		cout << "# Printing Created Tree Nodes #" << endl;
 		for (int i=0; i<nodeNum; i++){
 			cout << "Node index= " << Nodes[i].get_index() << ", Value= " <<  Nodes[i].get_value();
 			if(Nodes[i].get_isRight()){
@@ -346,6 +412,8 @@ vector<node> StructTree(int height, string type ) {
 				cout << " Leaf Node !! ";
 			cout << endl;
 		}
+		cout << endl;
+		cout << endl;
 	}
 
 	return Nodes;
@@ -356,7 +424,8 @@ vector<node> StructTree(int height, string type ) {
 // NOT a = 1 - a                    /////VERIFIED/////
 void NOT(Ctxt res, Ctxt op1, Ctxt encOne){
     res = encOne;
-    res.addCtxt(op1, true);
+   // res.addCtxt(op1, true); // res = res - op1
+    res -= op1;
 }
 
 // a AND b = a*b                    /////VERIFIED/////
@@ -403,14 +472,26 @@ Ctxt compare(Ctxt res, vector<Ctxt> x, vector<Ctxt> y, Ctxt encOne, Ctxt encTwo)
     //  eq:  (x_i = y_i) = x_i XNOR y_i
     
         for (int i = 0; i<vec_len; i++){
-            NOT(res, x[i], encOne);     // NOT x_i
-            res = AND(res, y[i]);       // res = NOT x_i AND y_i
-            less.push_back(res);
+            //NOT(res, x[i], encOne);     // NOT x_i
+            //res = AND(res, y[i]);       // res = NOT x_i AND y_i
+        		encOne.addCtxt(x[i], true);
+        		res = encOne;
+        		//NOT(res, x[i], encOne);     // NOT x_i
+        	    res *= y[i];
+        		less.push_back(res);
             if (i>0){
                 res = XNOR(res, x[i], y[i], encOne, encTwo);
                 eq.push_back(res);
         }
     }
+
+        ZZX plainDeb;
+		cout << "decLess: ";
+        for (int i = 0; i<vec_len; i++){
+        		secretKey->Decrypt(plainDeb, less[i]);
+        		cout << plainDeb[0];
+            }
+        cout << endl;
     
     // DEBUG:
     cout << "Less vector: " << less.size();
@@ -465,7 +546,9 @@ Ctxt compare(Ctxt res, vector<Ctxt> x, vector<Ctxt> y, Ctxt encOne, Ctxt encTwo)
     return res;
 }
 
-
+//Ctxt pathCost(){
+//
+//}
 
 // /* =========	Main file: Demo	========= */
 
@@ -477,56 +560,46 @@ int main()
     cout << endl;
 
     char* bin;
-    //timing *timer=nullptr;
-    Timer time;
 
     // ## Start of FHE setup ##
-    //timer->start();
-    time.start();
-	long p = 2;     // plaintext module
-	long r = 1;
-	long L = 16;    // number of levels
-	long c = 2;
-	long w = 64;
-	long d = 0;
-	long k = 128;
-	long s = 0;
 
-	long m = FindM(k,L,c,p,d,s,0);
+    timer.start();
 
-	FHEcontext context(m,p,r);
-	buildModChain(context, L, c);
-	ZZX G = context.alMod.getFactorsOverZZ()[0];
+    setupHElib();
 
-	FHESecKey secretKey(context);
-	const FHEPubKey& publicKey = secretKey;
-	secretKey.GenSecKey(w);
-	addSome1DMatrices(secretKey);
+    timer.stop();
+    	cout << "KeyGen time: " << timer.elapsed_time() << " seconds." << endl;
 
-	time.stop();
-    cout << "KeyGen time: " << time.elapsed_time() << " seconds." << endl;
-
-    	//timer->stop("KeyGen", false);
     // ## End of FHE setup ##
-    
 
 
     // ## Start of structing a tree example ##
 
-    vector<node> T = StructTree(2, "full");
+    timer.start();
+
+    vector<node> T = StructTree(4, "full");
+
+    timer.stop();
+    cout << "TreeCreation time: " << timer.elapsed_time() << " seconds." << endl;
 
     // ## End of structing a tree example ##
 
 
     // Create encrypted values of 1 and 2:
-    Ctxt encOne(publicKey);
-    Ctxt encTwo(publicKey);
+    Ctxt encOne(*publicKey);
+    Ctxt encTwo(*publicKey);
     
     bin = toBinary(2);
     ZZX TWO = createPolyFromCoeffsArray(bin);
-    publicKey.Encrypt(encOne, to_ZZX(1));
-    publicKey.Encrypt(encTwo, TWO);
+    publicKey->Encrypt(encOne, to_ZZX(1));
+    publicKey->Encrypt(encTwo, TWO);
     
+     //DEBUGGING LOGIC FUNS:
+    ZZX decOne;
+   // encOne.addCtxt(encOne, true);
+    NOT(encOne, encOne, encOne);
+    secretKey->Decrypt(decOne, encOne);
+    cout << "Nagete(1) = " << decOne[0] << endl;
     
     // Setup client (user) and server inputs
     
@@ -534,9 +607,12 @@ int main()
     int unum, snum;
     snum = 11;          // set a server value to compare against
     
+    cout << endl;
+    cout << endl;
     cout << "Let's Compare Two Encrypted Values" << endl;
     cout << "Please Enter Your Value: " << endl;
     cin >> unum;
+    cout << endl;
     
     
     // Transform number into binary string and set ZZX coeffs from the binary string
@@ -548,57 +624,74 @@ int main()
     
     // Determine the length of the binary string for bit-by-bit encryption
     int len = strlen(bin);
-    cout << endl << len << endl;
+    //cout << endl << len << endl;
     
     printBits(bin);
     cout << endl;
 
     bin = toBinary(unum, len-1);
-    cout << endl << strlen(bin) << endl;
+    //cout << endl << strlen(bin) << endl;
     
     printBits(bin);
-    
     cout << endl;
     
     userValue = createPolyFromCoeffsArray(bin);
     printZZX(userValue);
-    
+    cout << endl;
     
     // Homomorphically encrypting individual bits in binary strings:
     
     ZZX temp, isLess;
     
-    Ctxt Value(publicKey);      // Stores temp encrypted values
-    Ctxt encLess(publicKey);    // Store the encryptied 1-bit comp result
+    Ctxt Value(*publicKey);      // Stores temp encrypted values
+    Ctxt encLess(*publicKey);    // Store the encryptied 1-bit comp result
     
     vector<Ctxt> uValue;
     vector<Ctxt> sValue;
     
     //timer->start();
+    timer.start();
     for (int i=0; i<len-1; i++){
         SetCoeff(temp, 0, userValue[i]);
-        publicKey.Encrypt(Value, temp);
+        publicKey->Encrypt(Value, temp);
         uValue.push_back(Value);
         
         SetCoeff(temp, 0, serverValue[i]);
-        publicKey.Encrypt(Value, temp);
+        publicKey->Encrypt(Value, temp);
         sValue.push_back(Value);
     }
+    timer.stop();
+    cout << endl;
+    cout << "Bit-by-bit Encryption time: " << timer.elapsed_time() << " seconds." << endl;
+
     //timer->stop("Encryption", false);
  
     // Performing homomorphic comparision on encrypted values
     // TODO: fo this for each decision node in the tree
     
     //timer->start();
+    timer.start();
     encLess = compare(encLess, uValue, sValue, encOne, encTwo);
    // timer->stop("Secure Comparison", false);
     
+    timer.stop();
+    cout << endl;
+    cout << "Secure Comparison time: " << timer.elapsed_time() << " seconds." << endl;
+
     //timer->start();
-    secretKey.Decrypt(isLess, encLess);
+    timer.start();
+    secretKey->Decrypt(isLess, encLess);
     //timer->stop("Decryption", false);
     
+    timer.stop();
+    cout << endl;
+	cout << "Result Decryption time: " << timer.elapsed_time() << " seconds." << endl;
+
+
     // Verification step: TODO: fix when numbers are equal, it yields wrong result!!
-    cout << "Is " << unum << " LESS THAN " << snum << " ?" << endl;
+	cout << endl;
+	cout << endl;
+	cout << "Is " << unum << " LESS THAN " << snum << " ?" << endl;
     cout << "The result is " << isLess[0] << endl << endl;
     
     // Performing Path Cost on encrypted values
@@ -610,3 +703,31 @@ int main()
     
   
 }
+
+
+//    //timer->start();
+//    time.start();
+//	long p = 2;     // plaintext module
+//	long r = 1;
+//	long L = 16;    // number of levels
+//	long c = 2;
+//	long w = 64;
+//	long d = 0;
+//	long k = 128;
+//	long s = 0;
+//
+//	long m = FindM(k,L,c,p,d,s,0);
+//
+//	FHEcontext context(m,p,r);
+//	buildModChain(context, L, c);
+//	ZZX G = context.alMod.getFactorsOverZZ()[0];
+//
+//	FHESecKey secretKey(context);
+//	const FHEPubKey& publicKey = secretKey;
+//	secretKey.GenSecKey(w);
+//	addSome1DMatrices(secretKey);
+//
+//	time.stop();
+//    cout << "KeyGen time: " << time.elapsed_time() << " seconds." << endl;
+
+    	//timer->stop("KeyGen", false);
