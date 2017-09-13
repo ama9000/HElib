@@ -536,6 +536,7 @@ Ctxt compare(Ctxt res, vector<Ctxt> x, vector<Ctxt> y, Ctxt encOne, Ctxt encTwo)
 void pathCost(vector<node> T, Ctxt encZero, Ctxt encOne){
 	Ctxt temp(*publicKey);
 	int nodeNum = T.size();
+    timer.start();
 	T[0].set_pathCost(encZero);
 
 	for(int i=1; i<nodeNum; i++){
@@ -550,6 +551,7 @@ void pathCost(vector<node> T, Ctxt encZero, Ctxt encOne){
 		}
 		T[i].set_pathCost(temp);
 	}
+    timer.stop();
 }
 
 void OT(int leafNum, vector<node> T, vector<Ctxt> ind, vector<Ctxt> blind){
@@ -562,17 +564,19 @@ void OT(int leafNum, vector<node> T, vector<Ctxt> ind, vector<Ctxt> blind){
 	int nodeNum = T.size();
 	int n = nodeNum - leafNum;
 
+	timer.start();
 	for (int i = n; i<nodeNum; i++){
 		if (T[i].get_isLeaf()){		// double checking that we are computing on leafNodes only
 			// computing the indicator: ind = pc * random
 			temp = T[i].get_pathCost();
-			ind[i] *=temp;
+			ind[i-n] *=temp;
 			// computing the blinded value: blind = classValue + ind
 			temp = T[i].get_vctxt();
-			temp += ind[i];
+			temp += ind[i-n];
 			blind.push_back(temp);
 		}
 	}
+	timer.stop();
 }
 
 // /* =========	Main file: Demo	========= */
@@ -617,6 +621,8 @@ int main() // TODO: include variables to enable experimenting with different cry
 
 	// for now, use hard-coded info to determine the number of leafNode
 	int leafNum = T[T.size()-1].get_value();
+	int decisionNum = T.size()-leafNum;
+
 	//if (type == "perfect") leafNum = pow(2, height);
 	//if (type == "full") leafNum = T[T.size()-1].get_value();
 
@@ -645,81 +651,99 @@ int main() // TODO: include variables to enable experimenting with different cry
 
 	// Setup client (user) and server inputs
 
-	ZZX userValue, serverValue;
-	int unum, snum;
-	snum = 11;          // set a server value to compare against
-
+	//ZZX userValue, serverValue;
 	cout << endl;
 	cout << endl;
 	cout << "Let's Compare Two Encrypted Values" << endl;
-	cout << "Please Enter Your Value: " << endl;
-	cin >> unum;
+//	cout << "Please Enter Your Value: " << endl;
+//	cin >> unum;
 	cout << endl;
+
+	//random_device rdd;
+	//mt19937 genn(rdd());
+	uniform_int_distribution<long> diss(8, 15);  // set the range of random values
+
+	vector<int> serverValue;
+	//int rand = 10;m
+	for (int i=0; i<decisionNum; i++){
+		serverValue.push_back(diss(gen));	// for now, let all values be > 8
+		//serverValue.push_back(rand + i + 1);
+		cout << serverValue[i] << " ";
+	}
+	cout << endl << endl;
+
 
 	// Transform number into binary string and set ZZX coeffs from the binary string
 
-	ZZX temp;
+	ZZX temp, isLess;
 	vector<ZZX> sBits;
 	vector<ZZX> uBits;
+	int len;
+	int unum, snum;
+	//snum = 11;          // set a server value to compare against
 
-	bin = toBinary(snum);
-	printBits(bin);
-	cout << endl;
+	for (int i=0; i<decisionNum; i++){
 
-	// Determine the length of the binary string for bit-by-bit encryption
-	int len = strlen(bin);
-	//cout << endl << len << endl;
+		cout << "DecisionNode #" << i << endl;
+		snum = serverValue[i];
+		unum = T[i].get_value();
 
-	for (int i = 0; i<strlen(bin)-1; i++){
-		SetCoeff(temp, 0, to_ZZ(bin[i]-'0'));
-		sBits.push_back(temp);
-		cout << sBits[i] << " ";
-	}
-	cout << endl;
+		bin = toBinary(snum);
+		printBits(bin);
+		cout << endl;
 
-	//serverValue = createPolyFromCoeffsArray(bin);
-	// printZZX(serverValue);
+		// Determine the length of the binary string for bit-by-bit encryption
+		len = strlen(bin);
+		//cout << endl << len << endl;
 
-	bin = toBinary(unum, len-1);
-	//cout << endl << strlen(bin) << endl;
-	printBits(bin);
-	cout << endl;
+		for (int i = 0; i<strlen(bin)-1; i++){
+			SetCoeff(temp, 0, to_ZZ(bin[i]-'0'));
+			sBits.push_back(temp);
+			cout << sBits[i] << " ";
+		}
+		cout << endl;
 
-	for (int i = 0; i<strlen(bin)-1; i++){
-		SetCoeff(temp, 0, to_ZZ(bin[i]-'0'));
-		uBits.push_back(temp);
-		cout << uBits[i] << " ";
-	}
-	cout << endl;
+		//serverValue = createPolyFromCoeffsArray(bin);
+		// printZZX(serverValue);
 
-//	userValue = createPolyFromCoeffsArray(bin);
-//	printZZX(userValue);
-	cout << endl;
+		bin = toBinary(unum, len-1);
+		//cout << endl << strlen(bin) << endl;
+		printBits(bin);
+		cout << endl;
 
-	// ######## Homomorphically encrypting individual bits in binary strings ########
+		for (int i = 0; i<strlen(bin)-1; i++){
+			SetCoeff(temp, 0, to_ZZ(bin[i]-'0'));
+			uBits.push_back(temp);
+			cout << uBits[i] << " ";
+		}
+		cout << endl;
 
-	ZZX isLess;
+		//	userValue = createPolyFromCoeffsArray(bin);
+		//	printZZX(userValue);
+		cout << endl;
 
-	Ctxt Value(*publicKey);      // Stores temp encrypted values
-	Ctxt encLess(*publicKey);    // Store the encryptied 1-bit comp result
+		// ######## Homomorphically encrypting individual bits in binary strings ########
 
-	vector<Ctxt> uValue;
-	vector<Ctxt> sValue;
+		Ctxt Value(*publicKey);      // Stores temp encrypted values
+		Ctxt encLess(*publicKey);    // Store the encryptied 1-bit comp result
 
-	//timer->start();
-	timer.start();
-	for (int i=0; i<len-1; i++){
-		//SetCoeff(temp, 0, userValue[i]);
-		publicKey->Encrypt(Value, uBits[i]);//temp);
-		uValue.push_back(Value);
+		vector<Ctxt> uValue;
+		vector<Ctxt> sValue;
 
-		//SetCoeff(temp, 0, serverValue[i]);
-		publicKey->Encrypt(Value, sBits[i]);
-		sValue.push_back(Value);
-	}
-	timer.stop();
-	cout << endl;
-	cout << "Bit-by-bit Encryption time: " << timer.elapsed_time() << " seconds." << endl;
+		//timer->start();
+		timer.start();
+		for (int i=0; i<len-1; i++){
+			//SetCoeff(temp, 0, userValue[i]);
+			publicKey->Encrypt(Value, uBits[i]);//temp);
+			uValue.push_back(Value);
+
+			//SetCoeff(temp, 0, serverValue[i]);
+			publicKey->Encrypt(Value, sBits[i]);
+			sValue.push_back(Value);
+		}
+		timer.stop();
+		cout << endl;
+		cout <<"Bit-by-bit Encryption time: " << timer.elapsed_time() << " seconds." << endl;
 
 	//timer->stop("Encryption", false);
 
@@ -734,6 +758,8 @@ int main() // TODO: include variables to enable experimenting with different cry
 	timer.stop();
 	cout << endl;
 	cout << "Secure Comparison time: " << timer.elapsed_time() << " seconds." << endl;
+
+	T[i].set_vctxt(encLess);
 
 	// Testing correctness of comparison
 
@@ -752,14 +778,59 @@ int main() // TODO: include variables to enable experimenting with different cry
 	cout << "Is " << unum << " LESS THAN " << snum << " ?" << endl;
 	cout << "The result is " << isLess[0] << endl << endl;
 
+	}	// end of the for loop for comparing each decision node!!
+
 
 	// ######## Performing Path Cost and Computing OT on encrypted values ########
 
+	// encrypt classification values/labels
+
+    Ctxt tValue(*publicKey);
+
+	for (int i=leafNum; i<T.size(); i++){
+			publicKey->Encrypt(tValue, to_ZZX(T[i].get_value()));
+			T[i].set_vctxt(tValue);
+		}
+
+	pathCost(T, encZero, encOne);
+	cout << endl;
+	cout << "Path Cost time: " << timer.elapsed_time() << " seconds." << endl;
+
 	vector<Ctxt> ind;
 	vector<Ctxt> blind;
+	int tempint;
+
+	cout << leafNum;
+
+	uniform_int_distribution<long> disss(1, 10);
+	cout << endl << "Random values for leaf nodes: " << endl ;
+
+	for (int i = 0; i<leafNum; i++){
+		tempint = disss(gen);
+		cout << tempint << " ";
+		publicKey->Encrypt(tValue, to_ZZX(tempint));
+		ind.push_back(tValue);
+	}
+
+	OT(leafNum, T, ind, blind);
+
+	cout << endl << blind.size() << endl;
+
+	cout << endl;
+	cout << "Oblivious Transfer time: " << timer.elapsed_time() << " seconds." << endl;
+
 
 	// Evaluation Result Retrieval:
-
+//	ZZX result;
+//
+//	for (int i = 0; i<ind.size(); i++){
+//		secretKey->Decrypt(result, ind[i]);
+//		if(result == to_ZZX(0))
+//			secretKey->Decrypt(result, blind[i]);
+//	}
+//
+//	cout << endl << endl << "The Class Label is:  " << result[0] << endl << endl;
+//
 
 	cout << "Program Ended Successfully!!" << endl;
 	cout << endl;
