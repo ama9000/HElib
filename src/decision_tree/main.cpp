@@ -567,7 +567,7 @@ ZZX OT(int leafNum, vector<node> T, vector<Ctxt> ind, vector<Ctxt> blind){
 
 	timer.start();
 	for (int i = n; i<nodeNum; i++){
-		if (T[i].get_isLeaf()){		// double checking that we are computing on leafNodes only
+		if (T[i].get_isLeaf()){		// double check that we are computing on leafNodes only
 			// computing the indicator: ind = pc * random
 			temp = T[i].get_pathCost();
 			ind[i-n] *=temp;
@@ -610,7 +610,7 @@ int main() // TODO: include variables to enable experimenting with different cry
 
 	// ######## Start of FHE setup ########
 
-	long p = 2;     // plaintext module
+	long p = 47;     // plaintext module
 	long r = 1;
 	long L = 16;    // number of levels
 	long c = 2;
@@ -655,6 +655,10 @@ int main() // TODO: include variables to enable experimenting with different cry
 
 	publicKey->Encrypt(encZero, to_ZZX(0));
 	publicKey->Encrypt(encOne, to_ZZX(1));
+
+	for (int i=T.size()-leafNum; i<T.size();i++){
+		T[i].set_vctxt(encZero);
+	}
 
 	bin = toBinary(2);
 
@@ -765,38 +769,38 @@ int main() // TODO: include variables to enable experimenting with different cry
 		cout << endl;
 		cout <<"Bit-by-bit Encryption time: " << timer.elapsed_time() << " seconds." << endl;
 
-	//timer->stop("Encryption", false);
+		//timer->stop("Encryption", false);
 
-	// ######## Performing homomorphic comparison on encrypted values ########
-	// TODO: do this for each decision node in the tree
+		// ######## Performing homomorphic comparison on encrypted values ########
+		// TODO: do this for each decision node in the tree
 
-	//timer->start();
-	timer.start();
-	encLess = compare(encLess, uValue, sValue, encOne, encTwo);
-	// timer->stop("Secure Comparison", false);
+		//timer->start();
+		timer.start();
+		encLess = compare(encLess, uValue, sValue, encOne, encTwo);
+		// timer->stop("Secure Comparison", false);
 
-	timer.stop();
-	cout << endl;
-	cout << "Secure Comparison time: " << timer.elapsed_time() << " seconds." << endl;
+		timer.stop();
+		cout << endl;
+		cout << "Secure Comparison time: " << timer.elapsed_time() << " seconds." << endl;
 
-	T[i].set_vctxt(encLess);
+		T[i].set_vctxt(encLess);
 
-	// Testing correctness of comparison
+		// Testing correctness of comparison
 
-	//timer->start();
-	timer.start();
-	secretKey->Decrypt(isLess, encLess);
-	//timer->stop("Decryption", false);
+		//timer->start();
+		timer.start();
+		secretKey->Decrypt(isLess, encLess);
+		//timer->stop("Decryption", false);
 
-	timer.stop();
-	cout << endl;
-	cout << "Result Decryption time: " << timer.elapsed_time() << " seconds." << endl;
+		timer.stop();
+		cout << endl;
+		cout << "Result Decryption time: " << timer.elapsed_time() << " seconds." << endl;
 
-	// Verification step: TODO: fix when numbers are equal, it yields wrong result!!
-	cout << endl;
-	cout << endl;
-	cout << "Is " << unum << " LESS THAN " << snum << " ?" << endl;
-	cout << "The result is " << isLess[0] << endl << endl;
+		// Verification step: TODO: fix when numbers are equal, it yields wrong result!!
+		cout << endl;
+		cout << endl;
+		cout << "Is " << unum << " LESS THAN " << snum << " ?" << endl;
+		cout << "The result is " << isLess[0] << endl << endl;
 
 	}	// end of the for loop for comparing each decision node!!
 
@@ -843,6 +847,14 @@ int main() // TODO: include variables to enable experimenting with different cry
 	//result[0] <<
 
 	printZZX(result);
+
+	cout << endl << endl << endl;
+
+	for (int i=0; i<T.size(); i++){
+		tValue = T[i].get_vctxt();		//get_pathCost();
+		secretKey->Decrypt(result, tValue);
+		cout << result[0] << "	";
+	}
 
 	//cout << endl << blind.size() << endl;
 
