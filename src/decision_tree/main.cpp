@@ -456,7 +456,7 @@ Ctxt compare(Ctxt res, vector<Ctxt> x, vector<Ctxt> y, Ctxt encOne, Ctxt encTwo)
 	// Create two vectors to store encrypted "bit-by-bit" algorithms: (<) and (=)
 
 	int vec_len = x.size();     // TODO make sure x and y have the same size
-	cout << endl << "Vec_length= " << vec_len << endl;
+	//cout << endl << "Vec_length= " << vec_len << endl;
 	vector<Ctxt> less;
 	vector<Ctxt> eq;
 
@@ -478,11 +478,11 @@ Ctxt compare(Ctxt res, vector<Ctxt> x, vector<Ctxt> y, Ctxt encOne, Ctxt encTwo)
 	}
 
 	ZZX plainDeb;
-	cout << "decLess: ";
-	for (int i = 0; i<vec_len; i++){
-		secretKey->Decrypt(plainDeb, less[i]);
-		cout << plainDeb[0];
-	}
+	//cout << "decLess: ";
+//	for (int i = 0; i<vec_len; i++){
+//		secretKey->Decrypt(plainDeb, less[i]);
+//		cout << plainDeb[0];
+//	}
 	cout << endl;
 
 	// DEBUG:
@@ -554,7 +554,7 @@ void pathCost(vector<node> T, Ctxt encZero, Ctxt encOne){
     timer.stop();
 }
 
-void OT(int leafNum, vector<node> T, vector<Ctxt> ind, vector<Ctxt> blind){
+ZZX OT(int leafNum, vector<node> T, vector<Ctxt> ind, vector<Ctxt> blind){
 	// computing the oblivious transfer to extract the result of tree evaluation.
 	// each element in ind is a ciphertext of blinded pathCost (i.e. pc * random value).
 	// ind is already populated with encryptions of random nums
@@ -563,6 +563,7 @@ void OT(int leafNum, vector<node> T, vector<Ctxt> ind, vector<Ctxt> blind){
 	Ctxt temp(*publicKey);
 	int nodeNum = T.size();
 	int n = nodeNum - leafNum;
+	ZZX result;
 
 	timer.start();
 	for (int i = n; i<nodeNum; i++){
@@ -577,6 +578,24 @@ void OT(int leafNum, vector<node> T, vector<Ctxt> ind, vector<Ctxt> blind){
 		}
 	}
 	timer.stop();
+
+	cout << endl;
+	cout << endl;
+	cout << "Oblivious Transfer time: " << timer.elapsed_time() << " seconds." << endl;
+
+	timer.start();
+	for (int i = 0; i<ind.size(); i++){
+		secretKey->Decrypt(result, ind[i]);
+		if(result == to_ZZX(0))
+			secretKey->Decrypt(result, blind[i]);
+	}
+	timer.stop();
+	cout << endl;
+	cout << "Result Retrieval and Decryption time: " << timer.elapsed_time() << " seconds." << endl;
+
+	return result;
+
+	//cout << endl << blind.size() << endl;
 }
 
 // /* =========	Main file: Demo	========= */
@@ -676,13 +695,14 @@ int main() // TODO: include variables to enable experimenting with different cry
 	// Transform number into binary string and set ZZX coeffs from the binary string
 
 	ZZX temp, isLess;
-	vector<ZZX> sBits;
-	vector<ZZX> uBits;
 	int len;
 	int unum, snum;
 	//snum = 11;          // set a server value to compare against
 
 	for (int i=0; i<decisionNum; i++){
+
+		vector<ZZX> sBits;
+		vector<ZZX> uBits;
 
 		cout << "DecisionNode #" << i << endl;
 		snum = serverValue[i];
@@ -800,7 +820,7 @@ int main() // TODO: include variables to enable experimenting with different cry
 	vector<Ctxt> blind;
 	int tempint;
 
-	cout << leafNum;
+	//cout << leafNum;
 
 	uniform_int_distribution<long> disss(1, 10);
 	cout << endl << "Random values for leaf nodes: " << endl ;
@@ -812,16 +832,24 @@ int main() // TODO: include variables to enable experimenting with different cry
 		ind.push_back(tValue);
 	}
 
-	OT(leafNum, T, ind, blind);
-
-	cout << endl << blind.size() << endl;
-
-	cout << endl;
-	cout << "Oblivious Transfer time: " << timer.elapsed_time() << " seconds." << endl;
+	//	cout << endl << ind.size() << endl;
+	//	cout << endl << blind.size() << endl;
 
 
-	// Evaluation Result Retrieval:
-//	ZZX result;
+	// OT and Evaluation Result Retrieval:
+	ZZX result =  OT(leafNum, T, ind, blind);
+	cout << endl << endl << "The Class Label is:  " << endl << endl;
+
+	//result[0] <<
+
+	printZZX(result);
+
+	//cout << endl << blind.size() << endl;
+
+	//	cout << endl;
+	//	cout << "Oblivious Transfer time: " << timer.elapsed_time() << " seconds." << endl;
+
+
 //
 //	for (int i = 0; i<ind.size(); i++){
 //		secretKey->Decrypt(result, ind[i]);
