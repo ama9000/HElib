@@ -7,12 +7,11 @@
 #include <cstddef>
 #include <sys/time.h>
 
-//#include "tree.h"
+//#include "decision_tree/tree.h"
 //#include <decision_tree/timing.h>
 
 using namespace std;
 using namespace NTL;
-
 
 typedef unsigned int uint;
 typedef unsigned long ulong;
@@ -47,7 +46,6 @@ Timer timer;
 
 void setupHElib() {
 
-
 		// ## Start of FHE setup ##
 		long p = 2;     // plaintext module
 		long r = 1;
@@ -76,7 +74,7 @@ ZZX createPolyFromCoeffsArray(char *coeffs){
     ZZX poly;
     for (int i=0; i<strlen(coeffs)-1;i++)
         SetCoeff(poly, i, coeffs[i]-'0');
-    //SetCoeff(poly, strlen(coeffs)-1, 1);
+    SetCoeff(poly, strlen(coeffs)-1, 1);
     return poly;
 }
 
@@ -421,21 +419,21 @@ vector<node> StructTree(int height, string type ) {
 
 // /* =========	Homomorphic Algorithms for NOT, AND, OR, XOR, XNOR, and Compare ========= */
 
-// NOT a = 1 - a                    /////VERIFIED/////
+// NOT a = 1 - a
 void NOT(Ctxt res, Ctxt op1, Ctxt encOne){
     res = encOne;
    // res.addCtxt(op1, true); // res = res - op1
     res -= op1;
 }
 
-// a AND b = a*b                    /////VERIFIED/////
+// a AND b = a*b
 Ctxt AND(Ctxt op1, Ctxt op2){
     // res = op1;
     // res *= op2;
     return op1 *= op2;
 }
 
-// a OR b= a+b-a*b                  /////VERIFIED/////
+// a OR b= a+b-a*b
 Ctxt OR(Ctxt res, Ctxt op1, Ctxt op2){
     res = AND(op1, op2);    // res = op1 * op2
     op1 += op2;             // op1 = op1 + op2
@@ -443,7 +441,7 @@ Ctxt OR(Ctxt res, Ctxt op1, Ctxt op2){
     return op1;
 }
 
-// a XOR b= a+b-2*a*b                /////VERIFIED/////
+// a XOR b= a+b-2*a*b
 Ctxt XOR(Ctxt res, Ctxt op1, Ctxt op2,  Ctxt encTwo){
     res = op1;
     res += op2;                     // res = op1 + op2
@@ -452,12 +450,14 @@ Ctxt XOR(Ctxt res, Ctxt op1, Ctxt op2,  Ctxt encTwo){
     return res;
 }
 
-// a XNOR b= a+(NOT b)-2*a*(NOT b)  /////VERIFIED/////
+// a XNOR b= a+(NOT b)-2*a*(NOT b)
 Ctxt XNOR(Ctxt res, Ctxt op1, Ctxt op2, Ctxt encOne, Ctxt encTwo){
     encOne.addCtxt(op2, true);             // encOne = 1 - op2 (NOT op2)
     res = XOR(res, op1, encOne, encTwo);
     return res;
 }
+
+// /* =========	Homomorphic Algorithms for Compare and PathCost ========= */
 
 Ctxt compare(Ctxt res, vector<Ctxt> x, vector<Ctxt> y, Ctxt encOne, Ctxt encTwo){
 
@@ -474,11 +474,11 @@ Ctxt compare(Ctxt res, vector<Ctxt> x, vector<Ctxt> y, Ctxt encOne, Ctxt encTwo)
         for (int i = 0; i<vec_len; i++){
             //NOT(res, x[i], encOne);     // NOT x_i
             //res = AND(res, y[i]);       // res = NOT x_i AND y_i
-        		encOne.addCtxt(x[i], true);
-        		res = encOne;
-        		//NOT(res, x[i], encOne);     // NOT x_i
+        		less.push_back(encOne);
+        		res = less[i];
+        		res.addCtxt(x[i], true);
         	    res *= y[i];
-        		less.push_back(res);
+        		less[i] = res;
             if (i>0){
                 res = XNOR(res, x[i], y[i], encOne, encTwo);
                 eq.push_back(res);
@@ -494,8 +494,8 @@ Ctxt compare(Ctxt res, vector<Ctxt> x, vector<Ctxt> y, Ctxt encOne, Ctxt encTwo)
         cout << endl;
     
     // DEBUG:
-    cout << "Less vector: " << less.size();
-    cout << endl;
+//    cout << "Less vector: " << less.size();
+//    cout << endl;
 //    cout << "Equal vector: " << eq.size();
 //    cout << endl;
 //    cout << endl;
@@ -515,12 +515,12 @@ Ctxt compare(Ctxt res, vector<Ctxt> x, vector<Ctxt> y, Ctxt encOne, Ctxt encTwo)
     
    // cout << "vec_len:" << vec_len-3 << endl;
     
-    for (int i=vec_len-3; i!=-1; i--)
+    for (int i=vec_len-3; i>-1; i--)
     {
         
         //cout << i << endl;
         res = eq[vec_len-2];        // x_l = y_l
-        for (int j = vec_len-2; j!=i; j--)
+        for (int j = vec_len-2; j>i; j--)
         {
        //     cout << j << endl;
             res = AND(res, eq[j-1]);
@@ -528,11 +528,6 @@ Ctxt compare(Ctxt res, vector<Ctxt> x, vector<Ctxt> y, Ctxt encOne, Ctxt encTwo)
         res = AND(res, less[i]);
         comp.push_back(res);
     }
-    
-    // cout << "comp is successfully computed" << endl;
-//    cout << "Comp vector: " << comp.size();
-//    cout << endl;
-
     
     // Computing the outer OR operations
     
@@ -546,15 +541,29 @@ Ctxt compare(Ctxt res, vector<Ctxt> x, vector<Ctxt> y, Ctxt encOne, Ctxt encTwo)
     return res;
 }
 
-//Ctxt pathCost(){
-//
-//}
+void pathCost(vector<node> T, Ctxt encZero, Ctxt encOne){
+	Ctxt temp(*publicKey);
+	int nodeNum = T.size();
+    T[0].set_pathCost(encZero);
+
+    for(int i=1; i<nodeNum; i++){
+    	if (	T[i].get_isRight()){		// if it is a right child, compute pc_node = pc_parent + (1-b_parent)
+    		temp = T[i].get_parent()->get_pathCost();
+    		encOne.addCtxt(T[i].get_parent()->get_vctxt(), true);	// encOne = 1 - b_parent
+    		temp+=encOne;
+    	} else {
+    		temp = T[i].get_parent()->get_pathCost();
+    		encOne=T[i].get_parent()->get_vctxt();	// encOne = b_parent
+    		temp+=encOne;
+    	}
+    	T[i].set_pathCost(temp);
+    }
+}
 
 // /* =========	Main file: Demo	========= */
 
-int main()
+int main() // TODO: include variables to enable experimenting with different crypto-system parameters
 {
-
     cout << endl;
     cout << "Program Started!!" << endl;
     cout << endl;
@@ -577,7 +586,7 @@ int main()
 
     timer.start();
 
-    vector<node> T = StructTree(4, "full");
+    vector<node> T = StructTree(2, "full");
 
     timer.stop();
     cout << "TreeCreation time: " << timer.elapsed_time() << " seconds." << endl;
@@ -586,20 +595,22 @@ int main()
 
 
     // Create encrypted values of 1 and 2:
+    Ctxt encZero(*publicKey);
     Ctxt encOne(*publicKey);
     Ctxt encTwo(*publicKey);
     
     bin = toBinary(2);
     ZZX TWO = createPolyFromCoeffsArray(bin);
+    publicKey->Encrypt(encZero, to_ZZX(0));
     publicKey->Encrypt(encOne, to_ZZX(1));
     publicKey->Encrypt(encTwo, TWO);
     
-     //DEBUGGING LOGIC FUNS:
-    ZZX decOne;
-   // encOne.addCtxt(encOne, true);
-    NOT(encOne, encOne, encOne);
-    secretKey->Decrypt(decOne, encOne);
-    cout << "Nagete(1) = " << decOne[0] << endl;
+//     //DEBUGGING LOGIC FUNS:
+//    ZZX decOne;
+//    encOne.addCtxt(encOne, true);
+//   // NOT(encOne, encOne, encOne);
+//    secretKey->Decrypt(decOne, encOne);
+//    cout << "Nagete(1) = " << decOne[0] << endl;
     
     // Setup client (user) and server inputs
     
