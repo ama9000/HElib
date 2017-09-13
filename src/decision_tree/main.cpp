@@ -19,19 +19,19 @@ typedef unsigned long ulong;
 class Timer		// source: https://github.com/arosharodrigo/HElib/blob/master/helib/src/io/myUtils.h
 {
 public:
-    void start() { m_start = my_clock(); }
-    void stop() { m_stop = my_clock(); }
-    double elapsed_time() const {
-        return m_stop - m_start;
-    }
+	void start() { m_start = my_clock(); }
+	void stop() { m_stop = my_clock(); }
+	double elapsed_time() const {
+		return m_stop - m_start;
+	}
 
 private:
-    double m_start, m_stop;
-    double my_clock() const {		//return time in seconds
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        return tv.tv_sec + tv.tv_usec * 1e-6;
-    }
+	double m_start, m_stop;
+	double my_clock() const {		//return time in seconds
+		struct timeval tv;
+		gettimeofday(&tv, NULL);
+		return tv.tv_sec + tv.tv_usec * 1e-6;
+	}
 };
 
 // /* ========= Public Params ========= */
@@ -40,125 +40,121 @@ FHEcontext* context;
 FHESecKey* secretKey;
 FHEPubKey* publicKey;
 ZZX G;
+
 Timer timer;
+
+random_device rd;
+mt19937 gen(rd());
+uniform_int_distribution<long> dis(0, 15);  // set the range of random values
+
 
 // /* ========= Utility Functions ========= */
 
-void setupHElib() {
+void setupHElib(long p, long r, long L, long c, long w, long d, long k, long s) {
+	long m = FindM(k,L,c,p,d,s,0);
 
-		// ## Start of FHE setup ##
-		long p = 2;     // plaintext module
-		long r = 1;
-		long L = 16;    // number of levels
-		long c = 2;
-		long w = 64;
-		long d = 0;
-		long k = 128;
-		long s = 0;
+	context = new FHEcontext(m,p,r);
+	buildModChain(*context, L, c);
+	G = context->alMod.getFactorsOverZZ()[0];
 
-		long m = FindM(k,L,c,p,d,s,0);
+	secretKey = new FHESecKey(*context);
+	publicKey = secretKey;
 
-		context = new FHEcontext(m,p,r);
-		buildModChain(*context, L, c);
-		G = context->alMod.getFactorsOverZZ()[0];
+	secretKey->GenSecKey(w);
+	addSome1DMatrices(*secretKey); // compute key-switching matrices that we need
 
-		secretKey = new FHESecKey(*context);
-		publicKey = secretKey;
-
-		secretKey->GenSecKey(w);
-		addSome1DMatrices(*secretKey); // compute key-switching matrices that we need
 }
 
 
 ZZX createPolyFromCoeffsArray(char *coeffs){
-    ZZX poly;
-    for (int i=0; i<strlen(coeffs)-1;i++)
-        SetCoeff(poly, i, coeffs[i]-'0');
-    SetCoeff(poly, strlen(coeffs)-1, 1);
-    return poly;
+	ZZX poly;
+	for (int i=0; i<strlen(coeffs)-1;i++)
+		SetCoeff(poly, i, coeffs[i]-'0');
+	SetCoeff(poly, strlen(coeffs)-1, 1);
+	return poly;
 }
 
 
 char *toBinary(int number) {
-    
-    int bit_length;
-    // set the length to the minimum number of bits required to represent the integer in binary:
-    if (number == 0)
-        bit_length = 1;
-    else
-        bit_length = floor(log2(number)) + 1;
-    
-    // define variables:
-    int remainder;
-    char *binaryBits = new char[bit_length+2]{0};
-    binaryBits[0] = '0';
-    binaryBits[bit_length] = '0';
-    binaryBits[bit_length+1] = '\0';
-    
-    int pos = 0;
-    
-    while (number > 0) {
-        remainder = number%2;
-        if (remainder == 0)
-            binaryBits[pos] = '0';
-        else
-            binaryBits[pos] = '1';
-        number = number>>1;		//number/2; Using logical shift right
-        pos++;
-    }
-    return binaryBits;
+
+	int bit_length;
+	// set the length to the minimum number of bits required to represent the integer in binary:
+	if (number == 0)
+		bit_length = 1;
+	else
+		bit_length = floor(log2(number)) + 1;
+
+	// define variables:
+	int remainder;
+	char *binaryBits = new char[bit_length+2]{0};
+	binaryBits[0] = '0';
+	binaryBits[bit_length] = '0';
+	binaryBits[bit_length+1] = '\0';
+
+	int pos = 0;
+
+	while (number > 0) {
+		remainder = number%2;
+		if (remainder == 0)
+			binaryBits[pos] = '0';
+		else
+			binaryBits[pos] = '1';
+		number = number>>1;		//number/2; Using logical shift right
+		pos++;
+	}
+	return binaryBits;
 }
 
 
 char *toBinary(int number, int bit_length) {
-    
-    // define variables:
-    int remainder;
-    char *binaryBits = new char[bit_length+2]{0};
-    binaryBits[0] = '0';
-    binaryBits[bit_length] = '0';
-    binaryBits[bit_length+1] = '\0';
-    
-    int pos = 0;
-    
-    while (pos < bit_length) {
-        binaryBits[pos] = '0';
-        pos++;
-    }
-    
-    pos = 0;
-    
-    while (number > 0) {
-        remainder = number%2;
-        if (remainder == 0)
-            binaryBits[pos] = '0';
-        else
-            binaryBits[pos] = '1';
-        number = number>>1;		//number/2; Use logical shift right
-        pos++;
-    }
-    
-    return binaryBits;
+
+	// define variables:
+	int remainder;
+	char *binaryBits = new char[bit_length+2]{0};
+	binaryBits[0] = '0';
+	binaryBits[bit_length] = '0';
+	binaryBits[bit_length+1] = '\0';
+
+	int pos = 0;
+
+	while (pos < bit_length) {
+		binaryBits[pos] = '0';
+		pos++;
+	}
+
+	pos = 0;
+
+	while (number > 0) {
+		remainder = number%2;
+		if (remainder == 0)
+			binaryBits[pos] = '0';
+		else
+			binaryBits[pos] = '1';
+		number = number>>1;		//number/2; Use logical shift right
+		pos++;
+	}
+
+	return binaryBits;
 }
 
 
 void printBits(char *bits) {
-    int len = strlen(bits);
-    cout << "length of binary string: " << len << endl;
-    for (int i=0; i < len; i++) {
-        cout<<bits[i];
-    }
-    cout << endl;
+	int len = strlen(bits);
+	//cout << "length of binary string: " << len << endl;
+	for (int i=0; i < len-1; i++) {
+		cout<<bits[i];
+	}
+	cout << endl;
 }
 
 void printZZX(ZZX poly) {
-    int len = deg(poly);
-    
-    cout << "length = degree = " << len << endl;
-    for (int i=0; i < len+1; i++) {
-        cout<<poly[i];
-    }
-    cout << endl;
+	int len = deg(poly);
+
+	//cout << "length = degree = " << len << endl;
+	for (int i=0; i < len+1; i++) {
+		cout<<poly[i];
+	}
+	cout << endl;
 }
 
 
@@ -169,115 +165,111 @@ class node{
 	//public FHEPubKey;
 
 private:
-    int value; 								// Stores the value of a node
-    ZZX valueX;								// Stores the polynomial representation of the node value
-    Ctxt vctxt = Ctxt(*publicKey);			// Stores the encrypted version of the value
-    Ctxt path_cost = Ctxt(*publicKey);		// Stores the encrypted path cost to this node
-    int index;								// Stores the class label for leaf nodes. For non-leaf nodes, it stores the value of the attribute of the parent's' split
-    bool isLeaf;								// boolean flag for leaf nodes
-    bool isRight;                   			// boolean flag to distinguish if leaf is right child of parent node
-    node* parent;							// Stores a pointer to the node's parent
-    node* left;								// Stores a pointer to the node's left child
-    node* right;								// Stores a pointer to the node's right child
+	int value; 								// Stores the value of a node
+	ZZX valueX;								// Stores the polynomial representation of the node value
+	Ctxt vctxt = Ctxt(*publicKey);			// Stores the encrypted version of the value
+	Ctxt path_cost = Ctxt(*publicKey);		// Stores the encrypted path cost to this node
+	int index;								// Stores the class label for leaf nodes. For non-leaf nodes, it stores the value of the attribute of the parent's' split
+	bool isLeaf;								// boolean flag for leaf nodes
+	bool isRight;                   			// boolean flag to distinguish if leaf is right child of parent node
+	node* parent;							// Stores a pointer to the node's parent
+	node* left;								// Stores a pointer to the node's left child
+	node* right;								// Stores a pointer to the node's right child
 
 public:
-    node();
-    node(int, int, bool, bool, node*, node*, node*);
-    virtual ~node();
+	node();
+	node(int, int, bool, bool, node*, node*, node*);
+	virtual ~node();
 
-    // GET ELEMENETS:
-    int get_value(){ return value; }
-    ZZX get_valueX(){
-        return valueX;
-    }
-    Ctxt get_vctxt(){
-        return vctxt;
-    }
-    Ctxt get_pathCost(){
-    		return path_cost;
-    }
-    int get_index(){
-        return index;
-    }
-    bool get_isLeaf(){
-        return isLeaf;
-    }
-    bool get_isRight(){
-        return isRight;
-    }
-    node* get_parent(){
-        return parent;
-    }
-    node* get_left(){
-        return left;
-    }
-    node* get_right(){
-        return right;
-    }
+	// GET ELEMENETS:
+	int get_value(){ return value; }
+	ZZX get_valueX(){
+		return valueX;
+	}
+	Ctxt get_vctxt(){
+		return vctxt;
+	}
+	Ctxt get_pathCost(){
+		return path_cost;
+	}
+	int get_index(){
+		return index;
+	}
+	bool get_isLeaf(){
+		return isLeaf;
+	}
+	bool get_isRight(){
+		return isRight;
+	}
+	node* get_parent(){
+		return parent;
+	}
+	node* get_left(){
+		return left;
+	}
+	node* get_right(){
+		return right;
+	}
 
-    // SET ELEMENTS:
-    void set_value(int v){
-        value = v;
-    }
-    void set_valueX(ZZX v){
-        valueX = v;
-    }
-    void set_vctxt(Ctxt vc){
-        vctxt = vc;
-    }
-    void set_pathCost(Ctxt pc){
-    		path_cost = pc;
-    }
-    void set_index(int id){
-        index = id;
-    }
-    void set_isLeaf(bool t){
-        isLeaf = t;
-    }
-    void set_isRight(bool ir){
-        isRight = ir;
-    }
-    void set_parent(node* p){
-        parent = p;
-    }
-    void set_left(node* l){
-        left = l;
-    }
-    void set_right(node* r){
-        right = r;
-    }
+	// SET ELEMENTS:
+	void set_value(int v){
+		value = v;
+	}
+	void set_valueX(ZZX v){
+		valueX = v;
+	}
+	void set_vctxt(Ctxt vc){
+		vctxt = vc;
+	}
+	void set_pathCost(Ctxt pc){
+		path_cost = pc;
+	}
+	void set_index(int id){
+		index = id;
+	}
+	void set_isLeaf(bool t){
+		isLeaf = t;
+	}
+	void set_isRight(bool ir){
+		isRight = ir;
+	}
+	void set_parent(node* p){
+		parent = p;
+	}
+	void set_left(node* l){
+		left = l;
+	}
+	void set_right(node* r){
+		right = r;
+	}
 
 };
 
 node::node() {
-    value = 0;
-    index = 0;
-    isLeaf = false;
-    isRight = false;
-    left = NULL;
-    right = NULL;
+	value = 0;
+	index = 0;
+	isLeaf = false;
+	isRight = false;
+	left = NULL;
+	right = NULL;
 }
 
 node::node(int v, int id, bool leaf, bool ir, node* p, node* l, node* r){
-    value = v;
-    index = id;
-    isLeaf = leaf;
-    isRight = ir;
-    parent = p;
-    left = l;
-    right = r;
+	value = v;
+	index = id;
+	isLeaf = leaf;
+	isRight = ir;
+	parent = p;
+	left = l;
+	right = r;
 }
 
 node::~node() {
-    // TODO Auto-generated destructor stub
+	// TODO Auto-generated destructor stub
 }
 
 // Structure: TODO: set isRight flags!!
 vector<node> StructTree(int height, string type ) {
-
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_int_distribution<long> dis(0, 15);  // set the range of random values
 
 	vector<node> Nodes;
 	int index = 0;
@@ -421,298 +413,360 @@ vector<node> StructTree(int height, string type ) {
 
 // NOT a = 1 - a
 void NOT(Ctxt res, Ctxt op1, Ctxt encOne){
-    res = encOne;
-   // res.addCtxt(op1, true); // res = res - op1
-    res -= op1;
+	res = encOne;
+	// res.addCtxt(op1, true); // res = res - op1
+	res -= op1;
 }
 
 // a AND b = a*b
 Ctxt AND(Ctxt op1, Ctxt op2){
-    // res = op1;
-    // res *= op2;
-    return op1 *= op2;
+	// res = op1;
+	// res *= op2;
+	return op1 *= op2;
 }
 
 // a OR b= a+b-a*b
 Ctxt OR(Ctxt res, Ctxt op1, Ctxt op2){
-    res = AND(op1, op2);    // res = op1 * op2
-    op1 += op2;             // op1 = op1 + op2
-    op1.addCtxt(res, true); // op1 = op1 + op2 - op1 * op2
-    return op1;
+	res = AND(op1, op2);    // res = op1 * op2
+	op1 += op2;             // op1 = op1 + op2
+	op1.addCtxt(res, true); // op1 = op1 + op2 - op1 * op2
+	return op1;
 }
 
 // a XOR b= a+b-2*a*b
 Ctxt XOR(Ctxt res, Ctxt op1, Ctxt op2,  Ctxt encTwo){
-    res = op1;
-    res += op2;                     // res = op1 + op2
-    op1.multiplyBy2(encTwo, op2);   // op1 = op1 * 2 * op2
-    res.addCtxt(op1, true);
-    return res;
+	res = op1;
+	res += op2;                     // res = op1 + op2
+	op1.multiplyBy2(encTwo, op2);   // op1 = op1 * 2 * op2
+	res.addCtxt(op1, true);
+	return res;
 }
 
 // a XNOR b= a+(NOT b)-2*a*(NOT b)
 Ctxt XNOR(Ctxt res, Ctxt op1, Ctxt op2, Ctxt encOne, Ctxt encTwo){
-    encOne.addCtxt(op2, true);             // encOne = 1 - op2 (NOT op2)
-    res = XOR(res, op1, encOne, encTwo);
-    return res;
+	encOne.addCtxt(op2, true);             // encOne = 1 - op2 (NOT op2)
+	res = XOR(res, op1, encOne, encTwo);
+	return res;
 }
 
 // /* =========	Homomorphic Algorithms for Compare and PathCost ========= */
 
 Ctxt compare(Ctxt res, vector<Ctxt> x, vector<Ctxt> y, Ctxt encOne, Ctxt encTwo){
 
-    // Create two vectors to store encrypted "bit-by-bit" algorithms: (<) and (=)
-    
-    int vec_len = x.size();     // TODO make sure x and y have the same size
-    cout << endl << "Vec_length= " << vec_len << endl;
-    vector<Ctxt> less;
-    vector<Ctxt> eq;
-    
-    // less: (x_i < y_i) = NOT x_i AND y_i
-    //  eq:  (x_i = y_i) = x_i XNOR y_i
-    
-        for (int i = 0; i<vec_len; i++){
-            //NOT(res, x[i], encOne);     // NOT x_i
-            //res = AND(res, y[i]);       // res = NOT x_i AND y_i
-        		less.push_back(encOne);
-        		res = less[i];
-        		res.addCtxt(x[i], true);
-        	    res *= y[i];
-        		less[i] = res;
-            if (i>0){
-                res = XNOR(res, x[i], y[i], encOne, encTwo);
-                eq.push_back(res);
-        }
-    }
+	// Create two vectors to store encrypted "bit-by-bit" algorithms: (<) and (=)
 
-        ZZX plainDeb;
-		cout << "decLess: ";
-        for (int i = 0; i<vec_len; i++){
-        		secretKey->Decrypt(plainDeb, less[i]);
-        		cout << plainDeb[0];
-            }
-        cout << endl;
-    
-    // DEBUG:
-//    cout << "Less vector: " << less.size();
-//    cout << endl;
-//    cout << "Equal vector: " << eq.size();
-//    cout << endl;
-//    cout << endl;
-    // DEBUG END
+	int vec_len = x.size();     // TODO make sure x and y have the same size
+	cout << endl << "Vec_length= " << vec_len << endl;
+	vector<Ctxt> less;
+	vector<Ctxt> eq;
 
-    
-    // Execute comparison circuit:
-    
-    vector<Ctxt> comp;
-    
-    // Computing the inner AND operations
-    
-    comp.push_back(less[vec_len-1]);
-    
-    res = AND(eq[vec_len-2], less[vec_len-2]);
-    comp.push_back(res);
-    
-   // cout << "vec_len:" << vec_len-3 << endl;
-    
-    for (int i=vec_len-3; i>-1; i--)
-    {
-        
-        //cout << i << endl;
-        res = eq[vec_len-2];        // x_l = y_l
-        for (int j = vec_len-2; j>i; j--)
-        {
-       //     cout << j << endl;
-            res = AND(res, eq[j-1]);
-        }
-        res = AND(res, less[i]);
-        comp.push_back(res);
-    }
-    
-    // Computing the outer OR operations
-    
-    res = comp[0];
-    for (int i=1; i<vec_len; i++)
-    {
-        res = OR(res, res, comp[i]);
-    }
-    
-    
-    return res;
+	// less: (x_i < y_i) = NOT x_i AND y_i
+	//  eq:  (x_i = y_i) = x_i XNOR y_i
+
+	for (int i = 0; i<vec_len; i++){
+		//NOT(res, x[i], encOne);     // NOT x_i
+		//res = AND(res, y[i]);       // res = NOT x_i AND y_i
+		less.push_back(encOne);
+		res = less[i];
+		res.addCtxt(x[i], true);
+		res *= y[i];
+		less[i] = res;
+		if (i>0){
+			res = XNOR(res, x[i], y[i], encOne, encTwo);
+			eq.push_back(res);
+		}
+	}
+
+	ZZX plainDeb;
+	cout << "decLess: ";
+	for (int i = 0; i<vec_len; i++){
+		secretKey->Decrypt(plainDeb, less[i]);
+		cout << plainDeb[0];
+	}
+	cout << endl;
+
+	// DEBUG:
+	//    cout << "Less vector: " << less.size();
+	//    cout << endl;
+	//    cout << "Equal vector: " << eq.size();
+	//    cout << endl;
+	//    cout << endl;
+	// DEBUG END
+
+
+	// Execute comparison circuit:
+
+	vector<Ctxt> comp;
+
+	// Computing the inner AND operations
+
+	comp.push_back(less[vec_len-1]);
+
+	res = AND(eq[vec_len-2], less[vec_len-2]);
+	comp.push_back(res);
+
+	// cout << "vec_len:" << vec_len-3 << endl;
+
+	for (int i=vec_len-3; i>-1; i--)
+	{
+
+		//cout << i << endl;
+		res = eq[vec_len-2];        // x_l = y_l
+		for (int j = vec_len-2; j>i; j--)
+		{
+			//     cout << j << endl;
+			res = AND(res, eq[j-1]);
+		}
+		res = AND(res, less[i]);
+		comp.push_back(res);
+	}
+
+	// Computing the outer OR operations
+
+	res = comp[0];
+	for (int i=1; i<vec_len; i++)
+	{
+		res = OR(res, res, comp[i]);
+	}
+
+
+	return res;
 }
 
 void pathCost(vector<node> T, Ctxt encZero, Ctxt encOne){
 	Ctxt temp(*publicKey);
 	int nodeNum = T.size();
-    T[0].set_pathCost(encZero);
+	T[0].set_pathCost(encZero);
 
-    for(int i=1; i<nodeNum; i++){
-    	if (	T[i].get_isRight()){		// if it is a right child, compute pc_node = pc_parent + (1-b_parent)
-    		temp = T[i].get_parent()->get_pathCost();
-    		encOne.addCtxt(T[i].get_parent()->get_vctxt(), true);	// encOne = 1 - b_parent
-    		temp+=encOne;
-    	} else {
-    		temp = T[i].get_parent()->get_pathCost();
-    		encOne=T[i].get_parent()->get_vctxt();	// encOne = b_parent
-    		temp+=encOne;
-    	}
-    	T[i].set_pathCost(temp);
-    }
+	for(int i=1; i<nodeNum; i++){
+		if (	T[i].get_isRight()){		// if it is a right child, compute pc_node = pc_parent + (1-b_parent)
+			temp = T[i].get_parent()->get_pathCost();
+			encOne.addCtxt(T[i].get_parent()->get_vctxt(), true);	// encOne = 1 - b_parent
+			temp+=encOne;
+		} else {
+			temp = T[i].get_parent()->get_pathCost();
+			encOne=T[i].get_parent()->get_vctxt();	// encOne = b_parent
+			temp+=encOne;
+		}
+		T[i].set_pathCost(temp);
+	}
+}
+
+void OT(int leafNum, vector<node> T, vector<Ctxt> ind, vector<Ctxt> blind){
+	// computing the oblivious transfer to extract the result of tree evaluation.
+	// each element in ind is a ciphertext of blinded pathCost (i.e. pc * random value).
+	// ind is already populated with encryptions of random nums
+	// each element in blind is a ciphertext of blinded classification value (i.e classVal + ind)
+
+	Ctxt temp(*publicKey);
+	int nodeNum = T.size();
+	int n = nodeNum - leafNum;
+
+	for (int i = n; i<nodeNum; i++){
+		if (T[i].get_isLeaf()){		// double checking that we are computing on leafNodes only
+			// computing the indicator: ind = pc * random
+			temp = T[i].get_pathCost();
+			ind[i] *=temp;
+			// computing the blinded value: blind = classValue + ind
+			temp = T[i].get_vctxt();
+			temp += ind[i];
+			blind.push_back(temp);
+		}
+	}
 }
 
 // /* =========	Main file: Demo	========= */
 
 int main() // TODO: include variables to enable experimenting with different crypto-system parameters
 {
-    cout << endl;
-    cout << "Program Started!!" << endl;
-    cout << endl;
+	cout << endl;
+	cout << "Program Started!!" << endl;
+	cout << endl;
 
-    char* bin;
+	char* bin;
 
-    // ## Start of FHE setup ##
+	// ######## Start of FHE setup ########
 
-    timer.start();
+	long p = 2;     // plaintext module
+	long r = 1;
+	long L = 16;    // number of levels
+	long c = 2;
+	long w = 64;
+	long d = 0;
+	long k = 128;
+	long s = 0;
 
-    setupHElib();
+	timer.start();
 
-    timer.stop();
-    	cout << "KeyGen time: " << timer.elapsed_time() << " seconds." << endl;
+	setupHElib( p,  r,  L,  c,  w,  d,  k,  s);
 
-    // ## End of FHE setup ##
+	timer.stop();
+	cout << "KeyGen time: " << timer.elapsed_time() << " seconds." << endl;
+
+	// ######## Creation of a decision tree example ########
+
+	int height = 2;
+	string type = "full";
+
+	timer.start();
+
+	vector<node> T = StructTree(height, type);
+
+	timer.stop();
+	cout << "TreeCreation time: " << timer.elapsed_time() << " seconds." << endl;
+
+	// for now, use hard-coded info to determine the number of leafNode
+	int leafNum = T[T.size()-1].get_value();
+	//if (type == "perfect") leafNum = pow(2, height);
+	//if (type == "full") leafNum = T[T.size()-1].get_value();
 
 
-    // ## Start of structing a tree example ##
+	// ######## Pre-HE computations and setup ########
 
-    timer.start();
+	// Create encrypted values of 1 and 2:
+	Ctxt encZero(*publicKey);
+	Ctxt encOne(*publicKey);
+	Ctxt encTwo(*publicKey);
 
-    vector<node> T = StructTree(2, "full");
+	publicKey->Encrypt(encZero, to_ZZX(0));
+	publicKey->Encrypt(encOne, to_ZZX(1));
 
-    timer.stop();
-    cout << "TreeCreation time: " << timer.elapsed_time() << " seconds." << endl;
+	bin = toBinary(2);
 
-    // ## End of structing a tree example ##
+	ZZX TWO = createPolyFromCoeffsArray(bin);
+	publicKey->Encrypt(encTwo, TWO);
 
+	//     //DEBUGGING LOGIC FUNS:
+	//    ZZX decOne;
+	//    encOne.addCtxt(encOne, true);
+	//   // NOT(encOne, encOne, encOne);
+	//    secretKey->Decrypt(decOne, encOne);
+	//    cout << "Nagete(1) = " << decOne[0] << endl;
 
-    // Create encrypted values of 1 and 2:
-    Ctxt encZero(*publicKey);
-    Ctxt encOne(*publicKey);
-    Ctxt encTwo(*publicKey);
-    
-    bin = toBinary(2);
-    ZZX TWO = createPolyFromCoeffsArray(bin);
-    publicKey->Encrypt(encZero, to_ZZX(0));
-    publicKey->Encrypt(encOne, to_ZZX(1));
-    publicKey->Encrypt(encTwo, TWO);
-    
-//     //DEBUGGING LOGIC FUNS:
-//    ZZX decOne;
-//    encOne.addCtxt(encOne, true);
-//   // NOT(encOne, encOne, encOne);
-//    secretKey->Decrypt(decOne, encOne);
-//    cout << "Nagete(1) = " << decOne[0] << endl;
-    
-    // Setup client (user) and server inputs
-    
-    ZZX userValue, serverValue;
-    int unum, snum;
-    snum = 11;          // set a server value to compare against
-    
-    cout << endl;
-    cout << endl;
-    cout << "Let's Compare Two Encrypted Values" << endl;
-    cout << "Please Enter Your Value: " << endl;
-    cin >> unum;
-    cout << endl;
-    
-    
-    // Transform number into binary string and set ZZX coeffs from the binary string
-    
-    bin = toBinary(snum);
-    serverValue = createPolyFromCoeffsArray(bin);
-    
-    printZZX(serverValue);
-    
-    // Determine the length of the binary string for bit-by-bit encryption
-    int len = strlen(bin);
-    //cout << endl << len << endl;
-    
-    printBits(bin);
-    cout << endl;
+	// Setup client (user) and server inputs
 
-    bin = toBinary(unum, len-1);
-    //cout << endl << strlen(bin) << endl;
-    
-    printBits(bin);
-    cout << endl;
-    
-    userValue = createPolyFromCoeffsArray(bin);
-    printZZX(userValue);
-    cout << endl;
-    
-    // Homomorphically encrypting individual bits in binary strings:
-    
-    ZZX temp, isLess;
-    
-    Ctxt Value(*publicKey);      // Stores temp encrypted values
-    Ctxt encLess(*publicKey);    // Store the encryptied 1-bit comp result
-    
-    vector<Ctxt> uValue;
-    vector<Ctxt> sValue;
-    
-    //timer->start();
-    timer.start();
-    for (int i=0; i<len-1; i++){
-        SetCoeff(temp, 0, userValue[i]);
-        publicKey->Encrypt(Value, temp);
-        uValue.push_back(Value);
-        
-        SetCoeff(temp, 0, serverValue[i]);
-        publicKey->Encrypt(Value, temp);
-        sValue.push_back(Value);
-    }
-    timer.stop();
-    cout << endl;
-    cout << "Bit-by-bit Encryption time: " << timer.elapsed_time() << " seconds." << endl;
+	ZZX userValue, serverValue;
+	int unum, snum;
+	snum = 11;          // set a server value to compare against
 
-    //timer->stop("Encryption", false);
- 
-    // Performing homomorphic comparision on encrypted values
-    // TODO: fo this for each decision node in the tree
-    
-    //timer->start();
-    timer.start();
-    encLess = compare(encLess, uValue, sValue, encOne, encTwo);
-   // timer->stop("Secure Comparison", false);
-    
-    timer.stop();
-    cout << endl;
-    cout << "Secure Comparison time: " << timer.elapsed_time() << " seconds." << endl;
+	cout << endl;
+	cout << endl;
+	cout << "Let's Compare Two Encrypted Values" << endl;
+	cout << "Please Enter Your Value: " << endl;
+	cin >> unum;
+	cout << endl;
 
-    //timer->start();
-    timer.start();
-    secretKey->Decrypt(isLess, encLess);
-    //timer->stop("Decryption", false);
-    
-    timer.stop();
-    cout << endl;
+	// Transform number into binary string and set ZZX coeffs from the binary string
+
+	ZZX temp;
+	vector<ZZX> sBits;
+	vector<ZZX> uBits;
+
+	bin = toBinary(snum);
+	printBits(bin);
+	cout << endl;
+
+	// Determine the length of the binary string for bit-by-bit encryption
+	int len = strlen(bin);
+	//cout << endl << len << endl;
+
+	for (int i = 0; i<strlen(bin)-1; i++){
+		SetCoeff(temp, 0, to_ZZ(bin[i]-'0'));
+		sBits.push_back(temp);
+		cout << sBits[i] << " ";
+	}
+	cout << endl;
+
+	//serverValue = createPolyFromCoeffsArray(bin);
+	// printZZX(serverValue);
+
+	bin = toBinary(unum, len-1);
+	//cout << endl << strlen(bin) << endl;
+	printBits(bin);
+	cout << endl;
+
+	for (int i = 0; i<strlen(bin)-1; i++){
+		SetCoeff(temp, 0, to_ZZ(bin[i]-'0'));
+		uBits.push_back(temp);
+		cout << uBits[i] << " ";
+	}
+	cout << endl;
+
+//	userValue = createPolyFromCoeffsArray(bin);
+//	printZZX(userValue);
+	cout << endl;
+
+	// ######## Homomorphically encrypting individual bits in binary strings ########
+
+	ZZX isLess;
+
+	Ctxt Value(*publicKey);      // Stores temp encrypted values
+	Ctxt encLess(*publicKey);    // Store the encryptied 1-bit comp result
+
+	vector<Ctxt> uValue;
+	vector<Ctxt> sValue;
+
+	//timer->start();
+	timer.start();
+	for (int i=0; i<len-1; i++){
+		//SetCoeff(temp, 0, userValue[i]);
+		publicKey->Encrypt(Value, uBits[i]);//temp);
+		uValue.push_back(Value);
+
+		//SetCoeff(temp, 0, serverValue[i]);
+		publicKey->Encrypt(Value, sBits[i]);
+		sValue.push_back(Value);
+	}
+	timer.stop();
+	cout << endl;
+	cout << "Bit-by-bit Encryption time: " << timer.elapsed_time() << " seconds." << endl;
+
+	//timer->stop("Encryption", false);
+
+	// ######## Performing homomorphic comparison on encrypted values ########
+	// TODO: do this for each decision node in the tree
+
+	//timer->start();
+	timer.start();
+	encLess = compare(encLess, uValue, sValue, encOne, encTwo);
+	// timer->stop("Secure Comparison", false);
+
+	timer.stop();
+	cout << endl;
+	cout << "Secure Comparison time: " << timer.elapsed_time() << " seconds." << endl;
+
+	// Testing correctness of comparison
+
+	//timer->start();
+	timer.start();
+	secretKey->Decrypt(isLess, encLess);
+	//timer->stop("Decryption", false);
+
+	timer.stop();
+	cout << endl;
 	cout << "Result Decryption time: " << timer.elapsed_time() << " seconds." << endl;
 
-
-    // Verification step: TODO: fix when numbers are equal, it yields wrong result!!
+	// Verification step: TODO: fix when numbers are equal, it yields wrong result!!
 	cout << endl;
 	cout << endl;
 	cout << "Is " << unum << " LESS THAN " << snum << " ?" << endl;
-    cout << "The result is " << isLess[0] << endl << endl;
-    
-    // Performing Path Cost on encrypted values
-   
-    cout << "Program Ended Successfully!!" << endl;
-    cout << endl;
+	cout << "The result is " << isLess[0] << endl << endl;
 
-    return 0;
-    
-  
+
+	// ######## Performing Path Cost and Computing OT on encrypted values ########
+
+	vector<Ctxt> ind;
+	vector<Ctxt> blind;
+
+	// Evaluation Result Retrieval:
+
+
+	cout << "Program Ended Successfully!!" << endl;
+	cout << endl;
+
+	return 0;
+
+
 }
 
 
@@ -741,4 +795,4 @@ int main() // TODO: include variables to enable experimenting with different cry
 //	time.stop();
 //    cout << "KeyGen time: " << time.elapsed_time() << " seconds." << endl;
 
-    	//timer->stop("KeyGen", false);
+//timer->stop("KeyGen", false);
