@@ -1,0 +1,8 @@
+//
+// Created by ph on 9/14/17.
+//
+
+#ifndef SECUREDECISIONTREE_CRYPTO_H
+#define SECUREDECISIONTREE_CRYPTO_H
+
+#endif //SECUREDECISIONTREE_CRYPTO_H
