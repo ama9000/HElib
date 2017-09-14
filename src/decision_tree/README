@@ -1,0 +1,31 @@
+
+Steps to compile and run this application: 
+
+1- Download and install the latest versions of NTL and GMP libraries.
+
+2- Read and follow instructions in INSTALL.txt to download the HElib library and compile it using its Makefile 
+(found in HElib/src). Make sure that the "fhe.a" file is created.
+
+3- cd to HElib/src/decision_tree and open the Makefile:
+
+  - change the path to the HElib path on your local machine
+
+  HEdir = /Users/PATH/TO/HElib/src
+  
+  
+4- On the command line:
+
+    cd HElib/src/decision_tree
+
+    make
+   
+    
+ 5- To run the code, simply run
+ 
+    ./secComp
+    
+    
+
+
+
+
