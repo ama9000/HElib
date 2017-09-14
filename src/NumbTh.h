@@ -632,8 +632,7 @@ void seekPastChar(istream& str, int cc);
 //! @brief Reverse a vector in place
 template<class T> void reverse(Vec<T>& v, long lo, long hi)
 {
-  long n = v.length();
-  assert(lo >= 0 && lo <= hi && hi < n);
+  assert(lo >= 0 && lo <= hi && hi < v.length());
 
   if (lo >= hi) return;
 

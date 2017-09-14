@@ -9,31 +9,45 @@
 #include <FHE.h>
 
 
-
 using namespace std;
 using namespace NTL;
 
-enum Node_t {leaf, decision, dummy};
+#define RAND_NODE_VALUE_LOWER_BOUND 1
+#define RAND_NODE_VALUE_UPPER_BOUND 15
+
+
+enum Node_t {ROOT, LEAF, DECISION, DUMMY};
 
 class node {
 private:
     int     ptxt_threshold;
-    Ctxt    ctxt_threshold;
+    Ctxt    *ctxt_threshold;
     int     ptxt_input_value;
-    Ctxt    ctxt_input_value;
+    Ctxt    *ctxt_input_value;
 
     bool    autoGen=false;
     Node_t  nodeType;
-    node*   parent=NULL;
-    node*   left_child=NULL;
-    node*   right_child=NULL;
+    node    *parent=NULL;
+    node    *left_child=NULL;
+    node    *right_child=NULL;
 
 
 public:
-
     node(Node_t, bool);
     node(Node_t , int, int);
     virtual ~node();
+
+    void encrypt_node_values();         // encrypt node values
+    void evaluate();                    // evaluate the boolean function
+
+
+    void print_node_values();
+
+
+
+
+
+
 
 
     /* Getters and Setters */
@@ -44,7 +58,7 @@ public:
         return this->ptxt_threshold;
     }
 
-    Ctxt get_ctxt_threshold() {
+    Ctxt *get_ctxt_threshold() {
         return this->ctxt_threshold;
     }
 
@@ -55,7 +69,7 @@ public:
         return this->ptxt_input_value;
     }
 
-    Ctxt get_ctxt_input_value() {
+    Ctxt *get_ctxt_input_value() {
         return this->ctxt_input_value;
     }
 
@@ -87,11 +101,6 @@ public:
     node* get_right_child() {
         return this->right_child;
     }
-
-
-
-
-
 
 
 };

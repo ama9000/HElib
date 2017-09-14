@@ -5,17 +5,45 @@
 #ifndef SECUREDECISIONTREE_UTIL_H
 #define SECUREDECISIONTREE_UTIL_H
 
+#include <string>
+
+/* math class */
+class math {
+private:
+
+public:
 
 
-class Helper {
+
+};
+
+
+
+
+
+
+
+
+/* helper class */
+class helper {
 private:
 
 
+
+
 public:
-    int static GetRandomInt(int, int);
+    static long getRandomInt(int, int);
 
 
 
+    /* print functions */
+    static void debugMSG(string);
+    static void sysMSG(string);
+    static void errorMSG(string);
+
+    void printInt(string, int);
+    void printString(string, string);
+    void printDouble(string, double);
 
 };
 

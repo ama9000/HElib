@@ -31,6 +31,13 @@ int main() {
     cout << "Program Started!!" << endl;
     cout << endl;
 
+    cout << helper::getRandomInt(0,15) << endl;
+
+
+
+
+
+
 
 
 
