@@ -2,7 +2,7 @@
 // Created by ph on 9/14/17.
 //
 
-#include "crypto.h"
+#include "Crypto.h"
 #include <FHE.h>
 
 
