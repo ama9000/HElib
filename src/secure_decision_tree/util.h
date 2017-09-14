@@ -7,8 +7,11 @@
 
 #include <string>
 
+using namespace std;
+
+
 /* math class */
-class math {
+class Math {
 private:
 
 public:
@@ -25,7 +28,7 @@ public:
 
 
 /* helper class */
-class helper {
+class Helper {
 private:
 
 
@@ -41,9 +44,9 @@ public:
     static void sysMSG(string);
     static void errorMSG(string);
 
-    void printInt(string, int);
-    void printString(string, string);
-    void printDouble(string, double);
+    static void printInt(string, int);
+    static void printString(string, string);
+    static void printDouble(string, double);
 
 };
 

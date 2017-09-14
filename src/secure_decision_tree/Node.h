@@ -18,7 +18,7 @@ using namespace NTL;
 
 enum Node_t {ROOT, LEAF, DECISION, DUMMY};
 
-class node {
+class Node {
 private:
     int     ptxt_threshold;
     Ctxt    *ctxt_threshold;
@@ -27,15 +27,15 @@ private:
 
     bool    autoGen=false;
     Node_t  nodeType;
-    node    *parent=NULL;
-    node    *left_child=NULL;
-    node    *right_child=NULL;
+    Node    *parent=NULL;
+    Node    *left_child=NULL;
+    Node    *right_child=NULL;
 
 
 public:
-    node(Node_t, bool);
-    node(Node_t , int, int);
-    virtual ~node();
+    Node(Node_t, bool);
+    Node(Node_t , int, int);
+    virtual ~Node();
 
     void encrypt_node_values();         // encrypt node values
     void evaluate();                    // evaluate the boolean function
@@ -81,24 +81,24 @@ public:
         return this->nodeType;
     }
 
-    void set_parent(node* parent) {
+    void set_parent(Node* parent) {
         this->parent = parent;
     }
-    node* get_parent() {
+    Node* get_parent() {
         return this->parent;
     }
 
-    void set_left_child(node* left_child) {
+    void set_left_child(Node* left_child) {
         this->left_child = left_child;
     }
-    node* get_left_child() {
+    Node* get_left_child() {
         return this->left_child;
     }
 
-    void set_right_child(node* right_child) {
+    void set_right_child(Node* right_child) {
         this->right_child = right_child;
     }
-    node* get_right_child() {
+    Node* get_right_child() {
         return this->right_child;
     }
 

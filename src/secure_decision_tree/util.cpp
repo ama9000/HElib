@@ -17,7 +17,7 @@ using namespace std;
 
 /* helper class functions */
 
-long helper::getRandomInt(int low_bound, int high_bound){
+long Helper::getRandomInt(int low_bound, int high_bound){
     random_device rd;
     mt19937 gen(rd());
     uniform_int_distribution<long> dis(low_bound, high_bound);
@@ -26,26 +26,26 @@ long helper::getRandomInt(int low_bound, int high_bound){
 
 
 
-void helper::debugMSG(string msg) {
+void Helper::debugMSG(string msg) {
     cout << "[DEBUG] " << msg << endl;
 }
 
-void helper::sysMSG(string msg) {
+void Helper::sysMSG(string msg) {
     cout << "[SYS] " << msg << endl;
 }
 
-void helper::errorMSG(string msg) {
+void Helper::errorMSG(string msg) {
     cout << "[ERROR] " << msg << endl;
 }
 
-void helper::printInt(string name, int value) {
+void Helper::printInt(string name, int value) {
     cout << name << ": " << value << endl;
 }
 
-void helper::printString(string name, string value) {
+void Helper::printString(string name, string value) {
     cout << name << ": " << value << endl;
 }
 
-void helper::printDouble(string name, double value) {
+void Helper::printDouble(string name, double value) {
     cout << name << ": " << value << endl;
 }

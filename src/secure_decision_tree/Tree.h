@@ -5,13 +5,16 @@
 #ifndef SECUREDECISIONTREE_TREE_H
 #define SECUREDECISIONTREE_TREE_H
 
-class tree {
+#include "Node.h"
+
+
+class Tree {
 private:
-    node *root=NULL;
+    Node *root=NULL;
 
 public:
     /* initialize a tree with root node */
-    tree();
+    Tree();
 
 
 
