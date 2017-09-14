@@ -41,8 +41,10 @@ void Node::evaluate() {
 
 
 void Node::print_node_values() {
-    Helper::printInt("threshold", this->ptxt_threshold);
-    Helper::printInt("input_value", this->ptxt_input_value);
+    //Helper::printString("Node Type", this->get_node_type_string(this->nodeType));
+    //Helper::printInt("threshold", this->ptxt_threshold);
+    //Helper::printInt("input_value", this->ptxt_input_value);
+    cout<<"test"<<endl;
 }
 
 

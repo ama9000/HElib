@@ -108,6 +108,18 @@ public:
         return this->right_child;
     }
 
+    string get_node_type_string(Node_t nodeType){
+        switch(nodeType){
+            case ROOT:
+                return "ROOT";
+            case LEAF:
+                return "LEAF";
+            case DECISION:
+                return "DECISION";
+            case DUMMY:
+                return "DUMMY";
+        }
+    }
 
 };
 

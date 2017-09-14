@@ -34,10 +34,10 @@ int main() {
 
     //cout << Helper::getRandomInt(0,15) << endl;
 
-
+    //cout << "test" << endl;
     Tree* tree = new Tree(COMPLETE, 2);
-    tree->get_RootNode()->print_node_values();
-
+    cout << tree->get_Current_Depth() << endl;
+    tree->print_tree();
 
 
 
