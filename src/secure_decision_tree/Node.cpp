@@ -19,10 +19,15 @@ Node::Node(Node_t nodeType, bool autoGen) {
     }
 }
 
-Node::Node(Node_t nodeType, int ptxt_threshold, int ptxt_input_value){
+Node::Node(Node_t nodeType, int ptxt_threshold){
     Node(nodeType, false);
     this->ptxt_threshold = ptxt_threshold;
-    this->ptxt_input_value = ptxt_input_value;
+}
+
+Node::Node(Node_t nodeType, Node* left_child, Node* right_child) {
+    Node(nodeType, true);
+    this->left_child=left_child;
+    this->right_child=right_child;
 }
 
 Node::~Node() {
@@ -36,9 +41,8 @@ void Node::evaluate() {
 
 
 void Node::print_node_values() {
-
-//    helper::debugMSG(this->ptxt_threshold);
-//    helper::
+    Helper::printInt("threshold", this->ptxt_threshold);
+    Helper::printInt("input_value", this->ptxt_input_value);
 }
 
 

@@ -4,9 +4,10 @@
 
 
 #include "util.h"
-#include "Node.h"
+#include "Tree.h"
 
 
+#define AUTOGEN true            // whether automatically generating a tree with node values randomly sampled.
 
 
 
@@ -31,10 +32,12 @@ int main() {
     cout << "Program Started!!" << endl;
     cout << endl;
 
-    cout << Helper::getRandomInt(0,15) << endl;
+    //cout << Helper::getRandomInt(0,15) << endl;
 
 
-    //tree tree
+    Tree* tree = new Tree(COMPLETE, 2);
+    tree->get_RootNode()->print_node_values();
+
 
 
 
