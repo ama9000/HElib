@@ -799,12 +799,13 @@ int main() // TODO: include variables to enable experimenting with different cry
 	for(int i=1; i<T.size(); i++){
 		if (	T[i].get_isRight()){		// if it is a right child, compute pc_node = pc_parent + (1-b_parent)
 			encTemp = T[i].get_parent()->get_pathCost();
-			encOne.addCtxt(T[i].get_parent()->get_vctxt(), true);	// encOne = 1 - b_parent
-			encTemp+=encOne;
+			tValue = encOne;
+			tValue.addCtxt(T[i].get_parent()->get_vctxt(), true);	// encOne = 1 - b_parent
+			encTemp+=tValue;
 		} else {
 			encTemp = T[i].get_parent()->get_pathCost();
-			encOne=T[i].get_parent()->get_vctxt();	// encOne = b_parent
-			encTemp+=encOne;
+			tValue=T[i].get_parent()->get_vctxt();	// encOne = b_parent
+			encTemp+=tValue;
 		}
 		T[i].set_pathCost(encTemp);
 	}
