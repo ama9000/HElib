@@ -792,10 +792,10 @@ int main() // TODO: include variables to enable experimenting with different cry
 //		cout << endl;
 //		cout << "Path Cost time: " << timer.elapsed_time() << " seconds." << endl;
 
-	timer.start();
-	T[0].set_pathCost(encZero);
 	publicKey->Encrypt(encOne, to_ZZX(1));
 
+	timer.start();
+	T[0].set_pathCost(encZero);
 	for(int i=1; i<T.size(); i++){
 		if (	T[i].get_isRight()){		// if it is a right child, compute pc_node = pc_parent + (1-b_parent)
 			encTemp = T[i].get_parent()->get_pathCost();
