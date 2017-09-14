@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <sys/time.h>
 
+
 typedef unsigned int uint;
 typedef unsigned long ulong;
 
@@ -32,5 +33,13 @@ private:
         return tv.tv_sec + tv.tv_usec * 1e-6;
     }
 };
+
+
+ZZX createPolyFromCoeffsArray(char *coeffs);
+char *toBinary(int number);
+char *toBinary(int number, int bit_length);
+void printBits(char *bits);
+void printZZX(ZZX poly);
+
 
 #endif /* util_h */
