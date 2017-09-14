@@ -27,8 +27,8 @@ class node{
 private:
 	int value; 								// Stores the value of a node
 	ZZX valueX;								// Stores the polynomial representation of the node value
-	Ctxt vctxt = Ctxt(*publicKey);			// Stores the encrypted version of the value
-	Ctxt path_cost = Ctxt(*publicKey);		// Stores the encrypted path cost to this node
+	Ctxt vctxt = nil;			// Stores the encrypted version of the value
+	Ctxt path_cost = nil;		// Stores the encrypted path cost to this node
 	int index;								// Stores the class label for leaf nodes. For non-leaf nodes, it stores the value of the attribute of the parent's' split
 	bool isLeaf;								// boolean flag for leaf nodes
 	bool isRight;                   			// boolean flag to distinguish if leaf is right child of parent node
