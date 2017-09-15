@@ -52,7 +52,9 @@ using namespace std;
 #ifdef __MACH__
 #include <sys/time.h>
 //clock_gettime is not implemented on OSX
+#ifndef CLOCK_MONOTONIC
 #define CLOCK_MONOTONIC 0
+#endif
 int clock_gettime(int clk_id, struct timespec* t);
 #endif
 

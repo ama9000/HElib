@@ -6,6 +6,8 @@
 #include "SecComparison.h"
 #include "util.h"
 #include "Tree.h"
+#include "timing.h"
+
 #include <iostream>
 
 
@@ -69,9 +71,11 @@ void testHE(){
 }
 
 
-void testTree() {
+void testTree(timing* timer) {
+    timer->start();
     Tree* tree = new Tree(COMPLETE, 2);
     tree->print_tree();
+    timer->stop("tree building", false);
 }
 
 
@@ -83,9 +87,11 @@ int main() {
     cout << "Program Started!!" << endl;
     cout << endl;
 
+    timing timer;
 
-    testTree();
+    testTree(&timer);
 
+    timer.show();
 
 
 
