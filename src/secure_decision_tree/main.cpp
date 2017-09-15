@@ -19,7 +19,15 @@ int main() {
     cout << "Program Started!!" << endl;
     cout << endl;
 
-    //cout << Helper::getRandomInt(0,15) << endl;
+/*    int test = 200;
+    while(test>0) {
+        unsigned int test2 = Helper::getRandomInt(0, 100);
+        cout << test2 << endl;
+        char* bin = Helper::intToBinary(test2);
+        cout << bin << endl;
+        test--;
+    }
+*/
 
     HEparams params;
     Crypto* cryptoObj = new Crypto(&params);
