@@ -11,15 +11,15 @@ class SecComparison{
 
 public:
 
-     Ctxt* NOT(Ctxt* op1);
+     Ctxt NOT(Ctxt op1);
 
-     Ctxt* AND(Ctxt* op1, Ctxt* op2);
+     Ctxt AND(Ctxt op1, Ctxt op2);
 
-     Ctxt* OR(Ctxt* res, Ctxt* op1, Ctxt* op2);
+     Ctxt OR(Ctxt res, Ctxt op1, Ctxt op2);
 
-     Ctxt* XOR(Ctxt* res, Ctxt* op1, Ctxt* op2);
+     Ctxt XOR(Ctxt res, Ctxt op1, Ctxt op2);
 
-     Ctxt* XNOR(Ctxt* res, Ctxt* op1, Ctxt* op2);
+     Ctxt XNOR(Ctxt res, Ctxt op1, Ctxt op2);
 
     // Ctxt* compare(Ctxt* res, vector<Ctxt*> x, vector<Ctxt*> y);
 

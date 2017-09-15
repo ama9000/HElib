@@ -7,43 +7,43 @@ using namespace std;
 using namespace NTL;
 
 // NOT a = 1 - a
- Ctxt* SecComparison::NOT(Ctxt* op1){
-    op1->negate();
-    op1->addConstant(to_ZZ(1));
+ Ctxt SecComparison::NOT(Ctxt op1){
+    op1.negate();
+    op1.addConstant(to_ZZ(1));
     return op1;
     // res.addCtxt(op1, true); // res = res - op1
     //res -= op1;
 }
 
 // a AND b = a*b
- Ctxt* SecComparison::AND(Ctxt* op1, Ctxt* op2){
+ Ctxt SecComparison::AND(Ctxt op1, Ctxt op2){
     // res = op1;
     // res *= op2;
-    *op1 *= *op2;
+    op1 *= op2;
     return op1;
 }
 
 // a OR b= a+b-a*b
- Ctxt* SecComparison::OR(Ctxt* res, Ctxt* op1, Ctxt* op2){
+ Ctxt SecComparison::OR(Ctxt res, Ctxt op1, Ctxt op2){
     res = AND(op1, op2);    // res = op1 * op2
-    *op1 += *op2;             // op1 = op1 + op2
-    op1->addCtxt(*res, true); // op1 = op1 + op2 - op1 * op2
+    op1 += op2;             // op1 = op1 + op2
+    op1.addCtxt(res, true); // op1 = op1 + op2 - op1 * op2
     return op1;
 }
 
 // a XOR b= a+b-2*a*b
- Ctxt* SecComparison::XOR(Ctxt* res, Ctxt* op1, Ctxt* op2){
+ Ctxt SecComparison::XOR(Ctxt res, Ctxt op1, Ctxt op2){
     res = op1;
-    *res += *op2;                     // res = op1 + op2
-    op1->multByConstant(to_ZZ(2));   // op1 = 2*op1
+    res += op2;                     // res = op1 + op2
+    op1.multByConstant(to_ZZ(2));   // op1 = 2*op1
     //op1.multiplyBy(op2);          // op1 = 2* op1 * op2
-    *op1 *= *op2;                     // op1 = 2* op1 * op2
-    res->addCtxt(*op1, true);         // res = op1 + op2 - 2 * op1 * op2
+    op1 *= op2;                     // op1 = 2* op1 * op2
+    res.addCtxt(op1, true);         // res = op1 + op2 - 2 * op1 * op2
     return res;
 }
 
 // a XNOR b= a+(NOT b)-2*a*(NOT b)
- Ctxt* SecComparison::XNOR(Ctxt* res, Ctxt* op1, Ctxt* op2){
+ Ctxt SecComparison::XNOR(Ctxt res, Ctxt op1, Ctxt op2){
     op2 = NOT(op2);
     res = XOR(res, op1, op2);
     return res;

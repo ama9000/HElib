@@ -21,9 +21,9 @@ enum Node_t {ROOT, LEAF, DECISION, DUMMY};
 class Node {
 private:
     int     ptxt_threshold;
-    Ctxt*   ctxt_threshold;
+    Ctxt*    ctxt_threshold;
     int     ptxt_input_value;
-    Ctxt*   ctxt_input_value;
+    Ctxt*    ctxt_input_value;
 
     bool    autoGen=false;
     int     nodeIdx;

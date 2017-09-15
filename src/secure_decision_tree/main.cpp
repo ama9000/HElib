@@ -23,47 +23,22 @@ int main() {
 
     HEparams params;
     Crypto* cryptoObj = new Crypto(&params);
-    //SecComparison secComparison;
+    SecComparison secComparison;
 
     Ctxt a(*(cryptoObj->get_pubKey()));
+    Ctxt b(*(cryptoObj->get_pubKey()));
+    Ctxt encOR(*(cryptoObj->get_pubKey()));
 
-//    Ctxt b(cryptoObj.get_pubKey());
-//    Ctxt h(cryptoObj.get_pubKey());
-
-   // Ctxt *a, *b, *h;
-//
-    //cryptoObj->encrypt(a, to_ZZX(1));
-
-    cryptoObj->get_pubKey()->Encrypt(a, to_ZZX(1));
-
-    cout << to_ZZX(1)<< endl;
+    cryptoObj->get_pubKey()->Encrypt(a, to_ZZX(0));
+    cryptoObj->get_pubKey()->Encrypt(b, to_ZZX(1));
 
     ZZX result;
 
-    //cryptoObj->decrypt(result, a);
+    encOR = secComparison.NOT(a);
 
-    cryptoObj->get_secKey()->Decrypt(result, a);
+    cryptoObj->get_secKey()->Decrypt(result, encOR);
 
     cout << result[0] << endl;
-
-
-    //cryptoObj.encrypt(b, to_ZZX(1));
-
-//
-//    //h = secComparison.OR(h, a, b);
-//
-//    //ZZX result =  to_ZZX(1);
-//
-    //ZZX result = cryptoObj.HEdecrypt(b);
-
-    //cout << endl << result << endl;
-
-
-
-
-
-    //tree tree
-
 
 
 
@@ -71,3 +46,12 @@ int main() {
 
 
 }
+
+
+//cryptoObj->decrypt(result, a);
+//    Ctxt b(cryptoObj.get_pubKey());
+//    Ctxt h(cryptoObj.get_pubKey());
+
+// Ctxt *a, *b, *h;
+//
+//cryptoObj->encrypt(a, to_ZZX(1));
