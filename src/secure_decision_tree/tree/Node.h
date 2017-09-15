@@ -25,6 +25,9 @@ private:
     int     ptxt_input_value;
     Ctxt*   ctxt_input_value;
 
+    int     ptxt_leaf_value;
+    Ctxt*   ctxt_leaf_value;
+
     bool    autoGen=false;
     int     nodeIdx;
     int     nodeLevel;
@@ -45,7 +48,7 @@ public:
     void evaluate();                    // evaluate the boolean function
 
 
-    void print_node_values();
+    void print_node_values(int);
 
 
 

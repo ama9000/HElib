@@ -7,7 +7,11 @@
 
 #include "Node.h"
 
+#define TREE_NODE_PRINT_INDENTATION 6
+
 enum Tree_t {COMPLETE, FULL, INCOMPLETE};
+
+
 
 class Tree {
 private:
@@ -17,9 +21,12 @@ private:
 
     bool    autoGen= false;
 
-    void inOrder(Node* n);
-    void preOrder(Node* n);
-    void postOrder(Node* n);
+    void printInOrder(Node*, int);
+    void printPreOrder(Node*, int);
+    void printPostOrder(Node*, int);
+    void evaluateInOrder(Node*);
+    void evaluatePreOrder(Node*);
+    void evaluatePostOrder(Node*);
 
 public:
     /* initialize a tree */
@@ -31,6 +38,7 @@ public:
     Node* populate_tree(Node*, int);
 
     void print_tree();
+    void evaluate_decision_nodes();
 
     int get_Current_Depth();
 

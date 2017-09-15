@@ -2,11 +2,11 @@
 // Created by ph on 9/14/17.
 //
 
-#include "Crypto.h"
-#include "SecComparison.h"
-#include "util.h"
-#include "Tree.h"
-#include "timing.h"
+#include "crypto/Crypto.h"
+#include "crypto/SecComparison.h"
+#include "common/util.h"
+#include "tree/Tree.h"
+#include "common/timing.h"
 
 #include <iostream>
 
@@ -18,7 +18,7 @@ using namespace std;
 
 
 void testBinary() {
-/*    int test = 200;
+    int test = 200;
     while(test>0) {
         unsigned int test2 = Helper::getRandomInt(0, 100);
         cout << test2 << endl;
@@ -26,7 +26,6 @@ void testBinary() {
         cout << bin << endl;
         test--;
     }
-*/
 }
 
 void testHE(timing* timer){
@@ -53,7 +52,7 @@ void testHE(timing* timer){
 
 void testTree(timing* timer) {
     timer->start();
-    Tree* tree = new Tree(COMPLETE, 2);
+    Tree* tree = new Tree(COMPLETE, 5);
     tree->print_tree();
     timer->stop("TreeBuilding", false);
 }
@@ -71,7 +70,7 @@ int main() {
 
     testTree(timer);
 
-    testHE(timer);
+    //testHE(timer);
 
 
 
