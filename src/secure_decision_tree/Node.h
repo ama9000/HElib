@@ -21,20 +21,23 @@ enum Node_t {ROOT, LEAF, DECISION, DUMMY};
 class Node {
 private:
     int     ptxt_threshold;
-    Ctxt    *ctxt_threshold;
+    Ctxt*   ctxt_threshold;
     int     ptxt_input_value;
-    Ctxt    *ctxt_input_value;
+    Ctxt*   ctxt_input_value;
 
     bool    autoGen=false;
-    Node_t  nodeType;
-    Node    *parent=NULL;
-    Node    *left_child=NULL;
-    Node    *right_child=NULL;
+    int     nodeIdx;
+    Node_t  nodeType=DECISION;
+    Node*   parent=NULL;
+    Node*   left_child=NULL;
+    Node*   right_child=NULL;
 
 
 public:
     Node(Node_t, bool);
-    Node(Node_t , int, int);
+    Node(Node_t, int);
+    Node(Node_t, Node*, Node*);         // Node type, left child, right child
+
     virtual ~Node();
 
     void encrypt_node_values();         // encrypt node values
@@ -77,6 +80,9 @@ public:
         return this->autoGen;
     }
 
+    int get_NodeIdx() {
+        return this->nodeIdx;
+    }
     Node_t get_NodeType() {
         return this->nodeType;
     }
@@ -102,6 +108,18 @@ public:
         return this->right_child;
     }
 
+    string get_node_type_string(Node_t nodeType){
+        switch(nodeType){
+            case ROOT:
+                return "ROOT";
+            case LEAF:
+                return "LEAF";
+            case DECISION:
+                return "DECISION";
+            case DUMMY:
+                return "DUMMY";
+        }
+    }
 
 };
 
