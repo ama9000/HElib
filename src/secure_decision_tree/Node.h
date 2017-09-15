@@ -108,7 +108,7 @@ public:
         return this->right_child;
     }
 
-    string get_node_type_string(Node_t nodeType){
+    string convert_NodeTypeToString(Node_t nodeType){
         switch(nodeType){
             case ROOT:
                 return "ROOT";

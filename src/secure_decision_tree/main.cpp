@@ -15,18 +15,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 int main() {
     cout << endl;
     cout << "Program Started!!" << endl;
@@ -34,9 +22,21 @@ int main() {
 
     //cout << Helper::getRandomInt(0,15) << endl;
 
+//    Node* roo = new Node(ROOT, true);
+//    Node_t nt = roo->get_NodeType();
+//    Helper::printString("nodeType", roo->convert_NodeTypeToString(nt));
+
+
+
     //cout << "test" << endl;
     Tree* tree = new Tree(COMPLETE, 2);
-    cout << tree->get_Current_Depth() << endl;
+
+//    Node* root = tree->get_RootNode();
+//    cout << "testing" << endl;
+//    Node_t nodeType = root->get_NodeType();
+//    cout << "testing2" << endl;
+//    Helper::printString("nodeType", root->convert_NodeTypeToString(nodeType));
+
     tree->print_tree();
 
 
