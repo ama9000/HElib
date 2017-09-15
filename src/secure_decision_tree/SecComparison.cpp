@@ -68,25 +68,25 @@ using namespace NTL;
         }
     }
 
-    //DEBUG
-    ZZX result;
-    cout << "ctxt_bit_less length: " << ctxt_bit_less.size() << endl;
-    cout << "Printing ctxt_bit_less encrypted content:" << endl;
-    for (int i = 0; i < ctxt_bit_less.size(); i++ ){
-        cryptobj->decrypt(result, ctxt_bit_less[i]);
-        cout << result[0] << "  ";
-    }
-
-    cout << endl;
-
-    cout << "ctxt_bit_eq length: " << ctxt_bit_eq.size() << endl;
-    cout << "Printing ctxt_bit_eq encrypted content:" << endl;
-    for (int i = 0; i < ctxt_bit_eq.size(); i++ ){
-        cryptobj->decrypt(result, ctxt_bit_eq[i]);
-        cout << result[0] << "  ";
-    }
-
-    cout << endl;
+//    //DEBUG
+//    ZZX result;
+//    cout << "ctxt_bit_less length: " << ctxt_bit_less.size() << endl;
+//    cout << "Printing ctxt_bit_less encrypted content:" << endl;
+//    for (int i = 0; i < ctxt_bit_less.size(); i++ ){
+//        cryptobj->decrypt(result, ctxt_bit_less[i]);
+//        cout << result[0] << "  ";
+//    }
+//
+//    cout << endl;
+//
+//    cout << "ctxt_bit_eq length: " << ctxt_bit_eq.size() << endl;
+//    cout << "Printing ctxt_bit_eq encrypted content:" << endl;
+//    for (int i = 0; i < ctxt_bit_eq.size(); i++ ){
+//        cryptobj->decrypt(result, ctxt_bit_eq[i]);
+//        cout << result[0] << "  ";
+//    }
+//
+//    cout << endl;
 
 
     // Execute comparison circuit:
@@ -109,11 +109,11 @@ using namespace NTL;
     }
 
     //DEBUG
-    cout << "ctxt_bit_comparison length: " << ctxt_bit_comparison.size() << endl;
-    for (int k = 0; k < ctxt_bit_comparison.size(); k++) {
-        cryptobj->decrypt(result, ctxt_bit_comparison[k]);
-        cout << result[0] << "  ";
-    }
+//    cout << "ctxt_bit_comparison length: " << ctxt_bit_comparison.size() << endl;
+//    for (int k = 0; k < ctxt_bit_comparison.size(); k++) {
+//        cryptobj->decrypt(result, ctxt_bit_comparison[k]);
+//        cout << result[0] << "  ";
+//    }
 
     // Computing the outer OR operations
 
