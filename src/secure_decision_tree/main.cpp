@@ -14,10 +14,8 @@ using namespace std;
 
 
 
-int main() {
-    cout << endl;
-    cout << "Program Started!!" << endl;
-    cout << endl;
+
+void testBinary() {
 
 /*    int test = 200;
     while(test>0) {
@@ -28,6 +26,7 @@ int main() {
         test--;
     }
 */
+}
 
 void testHE(){
     HEparams params;
@@ -77,10 +76,13 @@ void testTree() {
 
 
 
+
+
 int main() {
     cout << endl;
     cout << "Program Started!!" << endl;
     cout << endl;
+
 
     testTree();
 
