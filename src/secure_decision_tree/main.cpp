@@ -12,6 +12,23 @@
 using namespace std;
 
 
+
+
+int main() {
+    cout << endl;
+    cout << "Program Started!!" << endl;
+    cout << endl;
+
+/*    int test = 200;
+    while(test>0) {
+        unsigned int test2 = Helper::getRandomInt(0, 100);
+        cout << test2 << endl;
+        char* bin = Helper::intToBinary(test2);
+        cout << bin << endl;
+        test--;
+    }
+*/
+
 void testHE(){
     HEparams params;
     Crypto* cryptoObj = new Crypto(&params);
