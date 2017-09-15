@@ -1,4 +1,3 @@
-
 CC = g++
 LD = g++
 AR = ar
@@ -6,8 +5,7 @@ AR = ar
 CPPFLAGS=-Wall -std=c++11 -DNDEBUG -g2 -I.. -I/usr/local/include -I.
 LIBS=../fhe.a -lntl -lgmp -lm -L/usr/local/lib
 TARGET=SecureDecisionTree
-OBJS=util.o Node.o Tree.o Crypto.o SecComparison.o
-
+OBJS=util.o Node.o Tree.o Crypto.o SecComparison.o timing.o
 
 all: $(TARGET)
 

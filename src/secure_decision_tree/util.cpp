@@ -49,3 +49,23 @@ void Helper::printString(string name, string value) {
 void Helper::printDouble(string name, double value) {
     cout << name << ": " << value << endl;
 }
+
+char* Helper::intToBinary(unsigned int dec, int length ){  // TODO include padding
+    string binary = "";
+    if(dec == 0){
+        binary = "0";
+    } else {
+        while (dec > 0) {
+            binary += std::to_string(dec%2);
+            dec = dec / 2;
+        }
+    }
+    if(binary.length()<length){
+        for(int i = binary.length(); i<length; i++){
+            binary += "0";
+        }
+    }
+    char* bin = new char[binary.length()];
+    strcpy(bin, binary.c_str());
+    return bin;
+}

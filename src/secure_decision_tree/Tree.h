@@ -13,7 +13,6 @@ class Tree {
 private:
     Tree_t  treeType=COMPLETE;
     Node*   root=NULL;
-    int     current_depth;
     int     required_depth;
 
     bool    autoGen= false;
@@ -29,7 +28,7 @@ public:
 
     Node* get_RootNode();
 
-    Node* populate_tree(Node*);
+    Node* populate_tree(Node*, int);
 
     void print_tree();
 

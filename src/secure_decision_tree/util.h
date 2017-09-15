@@ -37,7 +37,7 @@ private:
 public:
     static long getRandomInt(int, int);
 
-
+    static char* intToBinary(unsigned int, int);
 
     /* print functions */
     static void debugMSG(string);

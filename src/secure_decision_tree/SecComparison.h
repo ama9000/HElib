@@ -3,25 +3,26 @@
 //
 
 #ifndef SECUREDECISIONTREE_SECCOMPARISON_H
-#define SECUREDECISIONTREE_SECCOMPARISON_H=
+#define SECUREDECISIONTREE_SECCOMPARISON_H
 
 #include <FHE.h>
+#include "Crypto.h"
 
 class SecComparison{
 
 public:
 
-     Ctxt NOT(Ctxt op1);
+    Ctxt NOT(Ctxt ctxt_1);
 
-     Ctxt AND(Ctxt op1, Ctxt op2);
+    Ctxt AND(Ctxt ctxt_1, Ctxt ctxt_2);
 
-     Ctxt OR(Ctxt res, Ctxt op1, Ctxt op2);
+    Ctxt OR(Ctxt ctxt_OR, Ctxt ctxt_1, Ctxt ctxt_2);
 
-     Ctxt XOR(Ctxt res, Ctxt op1, Ctxt op2);
+    Ctxt XOR(Ctxt ctxt_XOR, Ctxt ctxt_1, Ctxt ctxt_2);
 
-     Ctxt XNOR(Ctxt res, Ctxt op1, Ctxt op2);
+    Ctxt XNOR(Ctxt ctxt_XNOR, Ctxt ctxt_1, Ctxt ctxt_2);
 
-    // Ctxt* compare(Ctxt* res, vector<Ctxt*> x, vector<Ctxt*> y);
+    Ctxt compare(Ctxt ctxt_compare, vector<Ctxt> ctxt_input, vector<Ctxt> ctxt_threshold, Crypto* cryptobj);
 
 };
 
