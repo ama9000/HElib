@@ -5,34 +5,53 @@
 #ifndef SECUREDECISIONTREE_CRYPTO_H
 #define SECUREDECISIONTREE_CRYPTO_H
 
+#include <FHE.h>
+#include <NTL/ZZX.h>
+
 struct HEparams{
     long p = 2;          // defining the plaintext space modular
     long r = 1;
     long L = 16;              // number of levels (i.e. number of prime modular in modChain)
-    long c = 0;
+    long c = 2;
     long w = 64;
     long d = 0;
     long k = 128;
     long s = 0;
 };
 
+
+
+////long p = 13;     // plaintext module
+//long r = 1;
+////long L = 16;    // number of levels
+//long c = 2;
+//long w = 64;
+//long d = 0;
+//long k = 128;
+//long s = 0;
+
 class Crypto{
 
 private:
-    const FHEcontext* context;
-    const FHESecKey* secretKey;
-    const FHEPubKey* publicKey;
-    const ZZX G;
+     HEparams* params;
+     FHEcontext* context;
+     FHESecKey* secretKey;
+     FHEPubKey* publicKey;
+     ZZX G;
 
 public:
-    const void setupHElib( HEparams *params);
+    Crypto(HEparams *params);
+
+    // accessing the keys
+    FHEPubKey* get_pubKey(){return this->publicKey;}
+
+    FHESecKey* get_secKey(){return this->secretKey;}
 
     // encryption
-    const Ctxt HEencrypt(ZZX plain_text ,FHEPubKey* publicKey);
+     void encrypt(Ctxt cipher_text, ZZX plain_text);
 
     // decryption
-    const ZZX HEdecrypt(Ctxt cipher_text ,FHESecKey* secretKey);
-
+     void decrypt(ZZX plain_text, Ctxt cipher_text);
 };
 
 #endif //SECUREDECISIONTREE_CRYPTO_H

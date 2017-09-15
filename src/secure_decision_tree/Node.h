@@ -27,6 +27,7 @@ private:
 
     bool    autoGen=false;
     int     nodeIdx;
+    int     nodeLevel;
     Node_t  nodeType=DECISION;
     Node*   parent=NULL;
     Node*   left_child=NULL;
@@ -82,6 +83,9 @@ public:
 
     int get_NodeIdx() {
         return this->nodeIdx;
+    }
+    void set_NodeLevel(int level){
+        this->nodeLevel=level;
     }
     Node_t get_NodeType() {
         return this->nodeType;

@@ -3,14 +3,14 @@
 //
 
 #include "Tree.h"
+#include "util.h"
 
 
 Tree::Tree(Tree_t treeType, int required_depth) {
     this->autoGen=true;
     this->required_depth=required_depth;
     this->treeType=treeType;
-    this->current_depth=0;
-    this->root=populate_tree(this->root);
+    this->root=populate_tree(this->root, 0);
 
 }
 
@@ -20,26 +20,21 @@ Node* Tree::get_RootNode() {
 }
 
 
-Node* Tree::populate_tree(Node* node) {
-    cout << current_depth << endl;
+Node* Tree::populate_tree(Node* node, int current_depth) {
     if(current_depth==required_depth){
-        cout << "leaf" << endl;
-        return new Node(LEAF, NULL, NULL);
+        node = new Node(LEAF, NULL, NULL);
+        node->set_NodeLevel(current_depth+1);
     } else {
         current_depth++;
-        Node* new_node = new Node(DECISION, NULL, NULL);
-        new_node->set_left_child(populate_tree(new_node->get_left_child()));
-        new_node->set_right_child(populate_tree(new_node->get_right_child()));
-        return new_node;
+        node = new Node(DECISION, NULL, NULL);
+        node->set_NodeLevel(current_depth);
+        node->set_left_child(populate_tree(node->get_left_child(), current_depth));
+        node->set_right_child(populate_tree(node->get_right_child(), current_depth));
     }
-}
-
-int Tree::get_Current_Depth(){
-    return this->current_depth;
+    return node;
 }
 
 void Tree::inOrder(Node* node){
-    cout << "test1" << endl;
     if(node->get_NodeType()==DECISION){
         inOrder(node->get_left_child());
         node->evaluate();
@@ -54,13 +49,11 @@ void Tree::inOrder(Node* node){
 void Tree::preOrder(Node* node){
     if(node->get_NodeType()==DECISION){
         node->evaluate();
-        //node->print_node_values();
-        cout << "DECISION" << endl;
+        node->print_node_values();
         preOrder(node->get_left_child());
         preOrder(node->get_right_child());
     } else if (node->get_NodeType()==LEAF) {
-        //node->print_node_values();
-        cout << "LEAF" << endl;
+        node->print_node_values();
     }
 }
 
@@ -77,6 +70,5 @@ void Tree::postOrder(Node* node) {
 }
 
 void Tree::print_tree() {
-    //inOrder(this->root);
     preOrder(this->root);
 }
